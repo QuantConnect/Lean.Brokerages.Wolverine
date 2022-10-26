@@ -1,31 +1,15 @@
-﻿/*
- * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
- * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
-using System;
-using QuantConnect.Packets;
+﻿using QuantConnect.Packets;
 using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using System.Collections.Generic;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.WEX
 {
     /// <summary>
-    /// Provides a template implementation of BrokerageFactory
+    /// Provides a WEX Brokerage implementation of BrokerageFactory
     /// </summary>
-    public class TemplateBrokerageFactory : BrokerageFactory
+    public class WEXBrokerageFactory : BrokerageFactory
     {
         /// <summary>
         /// Gets the brokerage data required to run the brokerage from configuration/disk
@@ -34,23 +18,26 @@ namespace QuantConnect.WEX
         /// The implementation of this property will create the brokerage data dictionary required for
         /// running live jobs. See <see cref="IJobQueueHandler.NextJob"/>
         /// </remarks>
-        public override Dictionary<string, string> BrokerageData { get; }
+        public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
+        {
+            { "wex-sender-comp-id", Config.Get("wex-sender-comp-id") },
+            { "wex-target-comp-id", Config.Get("wex-target-comp-id") },
+            { "wex-host", Config.Get("wex-host") },
+            { "wex-port", Config.Get("wex-port") },
+        };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TemplateBrokerageFactory"/> class
         /// </summary>
-        public TemplateBrokerageFactory() : base(typeof(TemplateBrokerage))
+        public WEXBrokerageFactory() : base(typeof(WEXBrokerage))
         {
         }
 
         /// <summary>
-        /// Gets a brokerage model that can be used to model this brokerage's unique behaviors
+        /// Gets a new instance of the <see cref="DefaultBrokerageModel"/>
         /// </summary>
         /// <param name="orderProvider">The order provider</param>
-        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider)
-        {
-            throw new NotImplementedException();
-        }
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new DefaultBrokerageModel();
 
         /// <summary>
         /// Creates a new IBrokerage instance

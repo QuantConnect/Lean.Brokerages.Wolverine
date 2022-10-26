@@ -1,54 +1,42 @@
-﻿/*
- * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
- * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-*/
-
-using QuantConnect.Data;
+﻿using QuantConnect.Data;
 using QuantConnect.Util;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Brokerages;
+using QuantConnect.WEX.Fix;
+using QuantConnect.WEX.Wex;
+using QuantConnect.WEX.Fix.Core;
 
 namespace QuantConnect.WEX
 {
-    [BrokerageFactory(typeof(TemplateBrokerageFactory))]
-    public class TemplateBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
+    [BrokerageFactory(typeof(WEXBrokerageFactory))]
+    public class WEXBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
     {
         private readonly IDataAggregator _aggregator;
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
+        private readonly IFixMarketDataController _fixMarketDataController;
+        private readonly FixInstance _fixInstance;
+
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
-        public override bool IsConnected { get; }
+        public override bool IsConnected => _fixInstance.IsConnected();
 
         /// <summary>
-        /// Parameterless constructor for brokerage
+        /// Creates a new instance
         /// </summary>
-        /// <remarks>This parameterless constructor is required for brokerages implementing <see cref="IDataQueueHandler"/></remarks>
-        public TemplateBrokerage()
-            : this(Composer.Instance.GetPart<IDataAggregator>())
-        {
-        }
-
-        /// <summary>
-         /// Creates a new instance
-         /// </summary>
         /// <param name="aggregator">consolidate ticks</param>
-        public TemplateBrokerage(IDataAggregator aggregator) : base("TemplateBrokerage")
+        public WEXBrokerage(IDataAggregator aggregator, FixConfiguration fixConfiguration, bool logFixMessages) : base("WEX")
         {
+            _fixMarketDataController = new FixMarketDataController();
+
+            var fixProtocolDirector = new WEXFixProtocolDirector(fixConfiguration, _fixMarketDataController);
+
+            _fixInstance = new FixInstance(fixProtocolDirector, fixConfiguration, logFixMessages);
+
             _aggregator = aggregator;
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
@@ -171,7 +159,7 @@ namespace QuantConnect.WEX
         /// </summary>
         public override void Connect()
         {
-            throw new NotImplementedException();
+            _fixInstance.Initialise();
         }
 
         /// <summary>

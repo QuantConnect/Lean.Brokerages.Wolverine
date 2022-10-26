@@ -25,7 +25,7 @@ namespace QuantConnect.WEX.Tests
         [Test]
         public void InitializesFactoryFromComposer()
         {
-            using var factory = Composer.Instance.Single<IBrokerageFactory>(instance => instance.BrokerageType == typeof(TemplateBrokerage));
+            using var factory = Composer.Instance.Single<IBrokerageFactory>(instance => instance.BrokerageType == typeof(WEXBrokerage));
             Assert.IsNotNull(factory);
         }
     }
