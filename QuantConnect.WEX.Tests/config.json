@@ -5,5 +5,6 @@
   "wex-sender-comp-id": "",
   "wex-target-comp-id": "",
   "wex-host": "",
-  "wex-port": ""
+  "wex-port": "",
+  "wex-on-behalf-Of-comp-id": ""
 }

@@ -2,6 +2,7 @@
 using QuantConnect.WEX.Fix.Core;
 using QuantConnect.WEX.Fix.Protocol;
 using QuickFix;
+using QuickFix.Fields;
 using QuickFix.FIX42;
 using System.Collections.Concurrent;
 using Message = QuickFix.Message;
@@ -26,17 +27,38 @@ namespace QuantConnect.WEX.Wex
 
         public bool AreSessionsReady()
         {
-            throw new NotImplementedException();
+            return _sessionHandlers.Values.All(handler => handler.IsReady);
         }
 
         public void EnrichOutbound(Message msg)
         {
-            throw new NotImplementedException();
+            switch (msg)
+            {
+                case Logon logon:
+                    logon.SetField(new ResetSeqNumFlag(ResetSeqNumFlag.YES));
+                    logon.SetField(new MsgSeqNum(1));
+                    logon.SetField(new EncryptMethod(EncryptMethod.NONE));
+                    logon.SetField(new OnBehalfOfCompID(_fixConfiguration.OnBehalfOfCompID));
+                    break;
+            }
         }
 
         public void Handle(Message msg, SessionID sessionId)
         {
-            throw new NotImplementedException();
+            if (!_sessionHandlers.TryGetValue(sessionId, out var handler))
+            {
+                Logging.Log.Error("Unknown session: " + sessionId);
+                return;
+            }
+
+            try
+            {
+                handler.Crack(msg, sessionId);
+            }
+            catch (Exception e)
+            {
+                Logging.Log.Error(e, $"[{sessionId}] Unable to process message {msg.GetType().Name}: {msg}");
+            }
         }
 
         public void OnLogon(SessionID sessionId)
@@ -50,7 +72,15 @@ namespace QuantConnect.WEX.Wex
 
         public void OnLogout(SessionID sessionId)
         {
-            throw new NotImplementedException();
+            Logging.Log.Trace($"OnLogout(): Removing handler for SessionId: {sessionId}");
+
+            if (_sessionHandlers.TryRemove(sessionId, out var handler))
+            {
+                if (sessionId.SenderCompID == _fixConfiguration.SenderCompId && sessionId.TargetCompID == _fixConfiguration.TargetCompId)
+                {
+                    _fixMarketDataController.Unregister((IFixOutboundMarketDataHandler)handler);
+                }
+            }
         }
 
         private IWEXFixSessionHandler CreateSessionHandler(string senderCompId, string targetCompId, ISession session)

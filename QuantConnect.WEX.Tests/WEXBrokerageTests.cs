@@ -24,7 +24,8 @@ namespace QuantConnect.WEX.Tests
             SenderCompId = Config.Get("wex-sender-comp-id"),
             TargetCompId = Config.Get("wex-target-comp-id"),
             Host = Config.Get("wex-host"),
-            Port = Config.Get("wex-port")
+            Port = Config.Get("wex-port"),
+            OnBehalfOfCompID = Config.Get("wex-on-behalf-Of-comp-id")
         };
 
         private readonly Symbol _symbolEs = Symbol.CreateFuture("ES", Market.CME, new DateTime(2021, 3, 19));
@@ -41,13 +42,17 @@ namespace QuantConnect.WEX.Tests
 
             var sessionId = new SessionID(_fixConfiguration.FixVersionString, _fixConfiguration.SenderCompId, _fixConfiguration.TargetCompId);
 
+            fixInstance.OnLogout(sessionId);
+
             fixInstance.OnLogon(sessionId);
+
+            fixInstance.Terminate();
         }
 
         [Test]
         public void SubscribeBrokerage()
         {
-            using (var brokerage = new WEXBrokerage(_aggregationManager, _fixConfiguration, false))
+            using (var brokerage = new WEXBrokerage(_aggregationManager, _fixConfiguration, true))
             {
                 brokerage.Connect();
                 Assert.IsTrue(brokerage.IsConnected);

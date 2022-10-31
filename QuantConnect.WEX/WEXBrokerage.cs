@@ -206,7 +206,7 @@ namespace QuantConnect.WEX
                 return false;
             }
 
-            throw new NotImplementedException();
+            return true;
         }
 
         /// <summary>
