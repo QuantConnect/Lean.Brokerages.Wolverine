@@ -66,7 +66,7 @@ namespace QuantConnect.WEX.Fix
 
         public void OnLogon(SessionID sessionID)
         {
-            throw new NotImplementedException();
+            _protocolDirector.OnLogon(sessionID);
         }
 
         public void OnLogout(SessionID sessionID)

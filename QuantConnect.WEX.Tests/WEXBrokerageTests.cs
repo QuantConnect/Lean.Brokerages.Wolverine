@@ -7,6 +7,10 @@ using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Brokerages;
 using QuantConnect.WEX.Fix;
+using QuantConnect.WEX.Fix.Core;
+using QuantConnect.WEX.Wex;
+using QuickFix;
+using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.WEX.Tests
 {
@@ -26,7 +30,22 @@ namespace QuantConnect.WEX.Tests
         private readonly Symbol _symbolEs = Symbol.CreateFuture("ES", Market.CME, new DateTime(2021, 3, 19));
 
         [Test]
-        public void LogOn()
+        public void LogOnFixInstance()
+        {
+            var marketDataController = new FixMarketDataController();
+            var fixProtocolDirector = new WEXFixProtocolDirector(_fixConfiguration, marketDataController);
+
+            using var fixInstance = new FixInstance(fixProtocolDirector, _fixConfiguration, true);
+
+            fixInstance.Initialise();
+
+            var sessionId = new SessionID(_fixConfiguration.FixVersionString, _fixConfiguration.SenderCompId, _fixConfiguration.TargetCompId);
+
+            fixInstance.OnLogon(sessionId);
+        }
+
+        [Test]
+        public void SubscribeBrokerage()
         {
             using (var brokerage = new WEXBrokerage(_aggregationManager, _fixConfiguration, false))
             {
