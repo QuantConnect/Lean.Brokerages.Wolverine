@@ -39,7 +39,7 @@ namespace QuantConnect.WEX.Fix
 
         public void Initialise()
         {
-            if (!IsExchangeOpen(extendedMarketHours: false))
+            if (!IsExchangeOpen(extendedMarketHours: true))
             {
                 Logging.Log.Error($"WEX.Initialise(ExchangeOpen: false)");
                 return;
@@ -69,15 +69,7 @@ namespace QuantConnect.WEX.Fix
         /// <param name="sessionID"></param>
         public void FromAdmin(Message message, SessionID sessionID) 
         {
-            Logging.Log.Trace($"admin level message: {message.GetType().Name}: {message}");
-
-            //TODO: Implement Re-Logon when we have caught not correct MsgSeqNum
-            //switch(message)
-            //{
-            //    case QuickFix.FIX42.Logout logout:
-            //        var text = message.GetString(QuickFix.Fields.Text.TAG);
-            //        break;
-            //}
+            _protocolDirector.HandleAdminMessage(message);
         }
 
         /// <summary>

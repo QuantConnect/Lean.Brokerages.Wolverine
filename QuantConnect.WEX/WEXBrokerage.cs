@@ -215,7 +215,12 @@ namespace QuantConnect.WEX
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
         private bool Subscribe(IEnumerable<Symbol> symbols)
         {
-            throw new NotImplementedException();
+            foreach (var symbol in symbols)
+            {
+                _fixMarketDataController.Subscribe(symbol);
+            }
+
+            return true;
         }
 
         /// <summary>

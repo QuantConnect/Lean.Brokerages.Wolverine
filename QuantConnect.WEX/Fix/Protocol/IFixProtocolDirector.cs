@@ -30,6 +30,12 @@ namespace QuantConnect.WEX.Fix.Protocol
         void Handle(Message msg, SessionID sessionId);
 
         /// <summary>
+        ///     Pass an admin message to the director to be handled.
+        /// </summary>
+        /// <param name="msg">Message to process</param>
+        void HandleAdminMessage(Message msg);
+
+        /// <summary>
         ///     Allow for enrichment / customization of any outgoing messages (such as logon).
         /// </summary>
         /// <param name="msg">Message to customize.</param>

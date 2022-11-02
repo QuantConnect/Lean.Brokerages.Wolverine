@@ -16,6 +16,7 @@ namespace QuantConnect.WEX.Wex
 
         private readonly ConcurrentDictionary<SessionID, IWEXFixSessionHandler> _sessionHandlers = new ConcurrentDictionary<SessionID, IWEXFixSessionHandler>();
 
+        private int _expectedMsgSeqNumLogOn = default;
 
         public WEXFixProtocolDirector(FixConfiguration fixConfiguration, IFixMarketDataController fixMarketDataController)
         {
@@ -35,8 +36,6 @@ namespace QuantConnect.WEX.Wex
             switch (msg)
             {
                 case Logon logon:
-                    logon.SetField(new ResetSeqNumFlag(ResetSeqNumFlag.YES));
-                    logon.SetField(new MsgSeqNum(1));
                     logon.SetField(new EncryptMethod(EncryptMethod.NONE));
                     logon.SetField(new OnBehalfOfCompID(_fixConfiguration.OnBehalfOfCompID));
                     break;
@@ -68,6 +67,13 @@ namespace QuantConnect.WEX.Wex
             var session = new QuickFixSession(sessionId);
             var handler = CreateSessionHandler(sessionId.SenderCompID, sessionId.TargetCompID, session);
             _sessionHandlers[sessionId] = handler;
+
+            // Crutch: to logOn with correct MsgSeqNum
+            if(_expectedMsgSeqNumLogOn != 0)
+            {
+                Session.LookupSession(sessionId).NextSenderMsgSeqNum = _expectedMsgSeqNumLogOn;
+                _expectedMsgSeqNumLogOn = 0;
+            }
         }
 
         public void OnLogout(SessionID sessionId)
@@ -83,6 +89,19 @@ namespace QuantConnect.WEX.Wex
             }
         }
 
+        public void HandleAdminMessage(Message msg)
+        {
+            switch (msg)
+            {
+                case Logout logout:
+                    _expectedMsgSeqNumLogOn = GetExpectedMsgSeqNum(msg);
+                    break;
+                case Heartbeat heartbeat:
+                    Logging.Log.Trace($"{msg.GetType().Name}: {msg}");
+                    break;
+            }
+        }
+
         private IWEXFixSessionHandler CreateSessionHandler(string senderCompId, string targetCompId, ISession session)
         {
             if (senderCompId == _fixConfiguration.SenderCompId && targetCompId == _fixConfiguration.TargetCompId)
@@ -91,6 +110,15 @@ namespace QuantConnect.WEX.Wex
             }
 
             throw new Exception($"Unknown session senderCompId: '{senderCompId}'");
+        }
+
+        private int GetExpectedMsgSeqNum(Message msg)
+        {
+            if (!msg.IsSetField(Text.TAG))
+                return 0;
+
+            var textMsg = msg.GetString(Text.TAG);
+            return textMsg.Contains("expected") ? Int32.Parse(System.Text.RegularExpressions.Regex.Match(textMsg, @"(?<=expected\s)[0-9]+").Value) : 0;
         }
     }
 }
