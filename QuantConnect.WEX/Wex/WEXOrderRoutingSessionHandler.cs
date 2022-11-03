@@ -1,15 +1,9 @@
-﻿using QuantConnect.Logging;
-using QuantConnect.Orders;
+﻿using QuantConnect.Orders;
 using QuantConnect.WEX.Fix.Core;
 using QuantConnect.WEX.Fix.Protocol;
-using QuickFix;
+using QuantConnect.WEX.Fix.Utils;
 using QuickFix.Fields;
 using QuickFix.FIX42;
-using System;
-using System.ComponentModel.Composition.Primitives;
-using System.Net.Http.Headers;
-using System.Runtime.InteropServices;
-using System.Windows.Markup;
 
 namespace QuantConnect.WEX.Wex
 {
@@ -46,7 +40,90 @@ namespace QuantConnect.WEX.Wex
 
         public bool PlaceOrder(Order order)
         {
-            throw new NotImplementedException();
+            var side = new Side(order.Direction == OrderDirection.Buy ? Side.BUY : Side.SELL);
+
+            var ticker = _symbolMapper.GetBrokerageSymbol(order.Symbol);
+            var securityType = new QuickFix.Fields.SecurityType(_symbolMapper.GetBrokerageSecurityType(order.Symbol.SecurityType));
+
+            var wexOrder = new NewOrderSingle
+            {
+                ClOrdID = new ClOrdID(WEXOrderId.GetNext()),                
+                HandlInst = new HandlInst(HandlInst.AUTOMATED_EXECUTION_ORDER_PRIVATE_NO_BROKER_INTERVENTION),
+                // ExDestination = 
+                Symbol = new QuickFix.Fields.Symbol(ticker),
+                SecurityType = securityType,
+                MaturityMonthYear = new MaturityMonthYear(),
+                Side = side,
+                TransactTime = new TransactTime(DateTime.UtcNow),
+                OrderQty = new OrderQty(order.Quantity),
+                TimeInForce = Utility.ConvertTimeInForce(order.TimeInForce, order.Type),
+
+                // CBOE Curb Indicator - not required, WEX Support to properly set this up
+                // CustOrderCapacity - not required
+                // ClearingAccount - not required
+                // ClearingFirm - not required
+                // PegDifference - not required, required if OrdType is P = "Pegged" 
+                // MaxShow - not required
+                // CustomerOrFirm - not required
+                // Open/Close - not required
+                // Text - not required
+                // Rule80A/OrderCapacity - not required
+                // CommissionType - not required
+                // Commission - not required
+                // ExpireTime - not required
+                // EffectiveTime - not required
+                // Currency - not required
+                // LocateBroker - not required, required for Sell Short or Sell Short
+                // LocateReqd - not required, required for Sell Short or Sell Short
+                // SecurityDesc - not required
+                // SecurityExchange - not required
+                // MaturityDay - not required
+                // IDSource - not required
+                // SecurityID - not required 
+                // SymbolSfx - not required
+                // ExecBroker - not required | *Only use this tag if agreed upon with WEX
+                // ExecInst - not required
+                // MinQty - not required
+                // MaxFloor - not required
+            };
+
+            if (order.Symbol.SecurityType == SecurityType.Option)
+            {
+                wexOrder.MaturityMonthYear = Utility.GetMaturityMonthYear(order.Symbol);
+                // wexOrder.PutOrCall = 
+                wexOrder.StrikePrice = new StrikePrice(decimal.Round(order.Price, Utility.LIMIT_DECIMAL_PLACE));
+                // wexOrder.UnderlyingSymbol
+            }
+
+            switch (order.Type)
+            {
+                case OrderType.Market:
+                    wexOrder.OrdType = new OrdType(OrdType.MARKET);
+                    break;
+                case OrderType.Limit:
+                    wexOrder.OrdType = new OrdType(OrdType.LIMIT);
+                    wexOrder.Price = new Price(((LimitOrder)order).LimitPrice);
+                    break;
+                case OrderType.StopMarket:
+                    wexOrder.OrdType = new OrdType(OrdType.STOP);
+                    wexOrder.StopPx = new StopPx(((StopMarketOrder)order).StopPrice);
+                    break;
+                case OrderType.StopLimit:
+                    wexOrder.OrdType = new OrdType(OrdType.STOP_LIMIT);
+                    wexOrder.Price = new Price(((StopLimitOrder)order).LimitPrice);
+                    wexOrder.StopPx = new StopPx(((StopLimitOrder)order).StopPrice);
+                    break;
+                case OrderType.MarketOnClose:
+                    wexOrder.OrdType = new OrdType(OrdType.MARKET_ON_CLOSE);
+                    break;
+                default:
+                    Logging.Log.Error($"WEX doesn't support current orderType: {nameof(order.Type)}");
+                    break;
+            }
+
+            order.BrokerId.Add(wexOrder.ClOrdID.getValue());
+
+            return _session.Send(wexOrder);
         }
 
         public bool RequestOpenOrders()
