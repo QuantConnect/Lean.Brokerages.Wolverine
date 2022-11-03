@@ -23,7 +23,7 @@ namespace QuantConnect.WEX.Fix.Core
 
         public bool CancelOrder(Order order)
         {
-            throw new NotImplementedException();
+            return _handler.CancelOrder(order);
         }
 
         public List<Order> GetOpenOrders()
@@ -38,7 +38,7 @@ namespace QuantConnect.WEX.Fix.Core
 
         public bool PlaceOrder(Order order)
         {
-            throw new NotImplementedException();
+            return _handler.PlaceOrder(order);
         }
 
         public void Receive(ExecutionReport orderEvent)
@@ -48,7 +48,18 @@ namespace QuantConnect.WEX.Fix.Core
 
         public void Register(IFixOutboundBrokerageHandler handler)
         {
-            throw new NotImplementedException();
+            if (handler == null)
+            {
+                throw new ArgumentNullException(nameof(handler));
+            }
+
+            if (_handler != null)
+            {
+                throw new Exception(
+                    $"A handler has already been registered: {_handler.GetType().FullName}#{_handler.GetHashCode()}, received: {handler.GetType().FullName}#{handler.GetHashCode()}");
+            }
+
+            _handler = handler;
         }
 
         public bool RequestOpenOrders()
@@ -58,12 +69,23 @@ namespace QuantConnect.WEX.Fix.Core
 
         public void Unregister(IFixOutboundBrokerageHandler handler)
         {
-            throw new NotImplementedException();
+            if (handler == null)
+            {
+                throw new ArgumentNullException(nameof(handler));
+            }
+
+            if (_handler == null || handler != _handler)
+            {
+                throw new Exception(
+                    $"The handler has not been registered: {handler.GetType().FullName}#{handler.GetHashCode()}");
+            }
+
+            _handler = null;
         }
 
         public bool UpdateOrder(Order order)
         {
-            throw new NotImplementedException();
+            return _handler.UpdateOrder(order);
         }
     }
 }
