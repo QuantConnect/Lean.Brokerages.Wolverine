@@ -141,7 +141,7 @@ namespace QuantConnect.WEX
         /// <returns>True if the request for a new order has been placed, false otherwise</returns>
         public override bool PlaceOrder(Order order)
         {
-            throw new NotImplementedException();
+            return _fixBrokerageController.PlaceOrder(order);
         }
 
         /// <summary>
@@ -151,7 +151,7 @@ namespace QuantConnect.WEX
         /// <returns>True if the request was made for the order to be updated, false otherwise</returns>
         public override bool UpdateOrder(Order order)
         {
-            throw new NotImplementedException();
+            return _fixBrokerageController.UpdateOrder(order);
         }
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace QuantConnect.WEX
         /// <returns>True if the request was made for the order to be canceled, false otherwise</returns>
         public override bool CancelOrder(Order order)
         {
-            throw new NotImplementedException();
+            return _fixBrokerageController.CancelOrder(order);
         }
 
         /// <summary>
