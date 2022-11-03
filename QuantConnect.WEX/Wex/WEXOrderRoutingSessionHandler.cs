@@ -30,7 +30,11 @@ namespace QuantConnect.WEX.Wex
 
         public bool CancelOrder(Order order)
         {
-            throw new NotImplementedException();
+            return _session.Send(new OrderCancelRequest
+            {
+                ClOrdID = new ClOrdID(WEXOrderId.GetNext()),
+                OrigClOrdID = new OrigClOrdID(order.BrokerId[0])
+            });
         }
 
         public bool PlaceOrder(Order order)
