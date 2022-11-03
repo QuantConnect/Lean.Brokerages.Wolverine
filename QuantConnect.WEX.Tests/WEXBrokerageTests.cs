@@ -28,7 +28,7 @@ namespace QuantConnect.WEX.Tests
             OnBehalfOfCompID = Config.Get("wex-on-behalf-Of-comp-id")
         };
 
-        private readonly Symbol _symbolEs = Symbol.CreateFuture("ES", Market.CME, new DateTime(2021, 3, 19));
+        private readonly Symbol _symbolIBMEquity = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
 
         [Test]
         public void LogOnFixInstance()
@@ -41,6 +41,8 @@ namespace QuantConnect.WEX.Tests
             fixInstance.Initialise();
 
             var sessionId = new SessionID(_fixConfiguration.FixVersionString, _fixConfiguration.SenderCompId, _fixConfiguration.TargetCompId);
+
+            Thread.Sleep(60000);
 
             fixInstance.OnLogout(sessionId);
 
@@ -59,7 +61,7 @@ namespace QuantConnect.WEX.Tests
 
                 var dataConfig = new SubscriptionDataConfig(
                 typeof(Tick),
-                _symbolEs,
+                _symbolIBMEquity,
                 Resolution.Tick,
                 TimeZones.Utc,
                 TimeZones.Utc,
@@ -80,7 +82,7 @@ namespace QuantConnect.WEX.Tests
 
                 Thread.Sleep(20000);
 
-                brokerage.Unsubscribe(dataConfig);
+                //brokerage.Unsubscribe(dataConfig);
 
                 Thread.Sleep(5000);
 

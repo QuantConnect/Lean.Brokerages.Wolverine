@@ -64,7 +64,7 @@ namespace QuantConnect.WEX
         {
             if (!CanSubscribe(dataConfig.Symbol))
             {
-                return null;
+                return Enumerable.Empty<BaseData>().GetEnumerator();
             }
 
             var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
