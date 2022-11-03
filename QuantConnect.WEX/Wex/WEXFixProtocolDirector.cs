@@ -11,17 +11,22 @@ namespace QuantConnect.WEX.Wex
 {
     public class WEXFixProtocolDirector : IFixProtocolDirector
     {
+        private readonly WEXSymbolMapper _symbolMapper;
         private readonly FixConfiguration _fixConfiguration;
-        private readonly IFixMarketDataController _fixMarketDataController;
+        private readonly IFixBrokerageController _fixBrokerageController;
 
         private readonly ConcurrentDictionary<SessionID, IWEXFixSessionHandler> _sessionHandlers = new ConcurrentDictionary<SessionID, IWEXFixSessionHandler>();
 
         private int _expectedMsgSeqNumLogOn = default;
 
-        public WEXFixProtocolDirector(FixConfiguration fixConfiguration, IFixMarketDataController fixMarketDataController)
+        public WEXFixProtocolDirector(
+            WEXSymbolMapper symbolMapper,
+            FixConfiguration fixConfiguration,
+            IFixBrokerageController fixBrokerageController)
         {
+            _symbolMapper = symbolMapper;
             _fixConfiguration = fixConfiguration;
-            _fixMarketDataController = fixMarketDataController;
+            _fixBrokerageController = fixBrokerageController;
         }
 
         public IMessageFactory MessageFactory { get; } = new MessageFactory();
@@ -69,7 +74,7 @@ namespace QuantConnect.WEX.Wex
             _sessionHandlers[sessionId] = handler;
 
             // Crutch: to logOn with correct MsgSeqNum
-            if(_expectedMsgSeqNumLogOn != 0)
+            if (_expectedMsgSeqNumLogOn != 0)
             {
                 Session.LookupSession(sessionId).NextSenderMsgSeqNum = _expectedMsgSeqNumLogOn;
                 _expectedMsgSeqNumLogOn = 0;
@@ -84,7 +89,7 @@ namespace QuantConnect.WEX.Wex
             {
                 if (sessionId.SenderCompID == _fixConfiguration.SenderCompId && sessionId.TargetCompID == _fixConfiguration.TargetCompId)
                 {
-                    _fixMarketDataController.Unregister((IFixOutboundMarketDataHandler)handler);
+                    _fixBrokerageController.Unregister((IFixOutboundBrokerageHandler)handler);
                 }
             }
         }
@@ -106,7 +111,7 @@ namespace QuantConnect.WEX.Wex
         {
             if (senderCompId == _fixConfiguration.SenderCompId && targetCompId == _fixConfiguration.TargetCompId)
             {
-                return new WEXMarketDataSessionHandler(session, _fixMarketDataController);
+                return new WEXOrderRoutingSessionHandler(_symbolMapper, session, _fixBrokerageController);
             }
 
             throw new Exception($"Unknown session senderCompId: '{senderCompId}'");

@@ -14,11 +14,16 @@ namespace QuantConnect.WEX
     [BrokerageFactory(typeof(WEXBrokerageFactory))]
     public class WEXBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
     {
+        private readonly IAlgorithm _algorithm;
+        private readonly LiveNodePacket _job;
+        private readonly IOrderProvider _orderProvider;
         private readonly IDataAggregator _aggregator;
+
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
-        private readonly IFixMarketDataController _fixMarketDataController;
+        private readonly IFixBrokerageController _fixBrokerageController;
         private readonly FixInstance _fixInstance;
+        private readonly WEXSymbolMapper _symbolMapper;
 
         /// <summary>
         /// Returns true if we're currently connected to the broker
@@ -29,27 +34,32 @@ namespace QuantConnect.WEX
         /// Creates a new instance
         /// </summary>
         /// <param name="aggregator">consolidate ticks</param>
-        public WEXBrokerage(IDataAggregator aggregator, FixConfiguration fixConfiguration, bool logFixMessages) : base("WEX")
+        public WEXBrokerage(
+            IAlgorithm algorithm, 
+            LiveNodePacket job, 
+            IOrderProvider orderProvider, 
+            IDataAggregator aggregator, 
+            FixConfiguration fixConfiguration, 
+            bool logFixMessages) : base("WEX")
         {
-            _fixMarketDataController = new FixMarketDataController();
+            _job = job;
+            _algorithm = algorithm;
+            _aggregator = aggregator;
+            _orderProvider = orderProvider;
 
-            var fixProtocolDirector = new WEXFixProtocolDirector(fixConfiguration, _fixMarketDataController);
+            _symbolMapper = new WEXSymbolMapper();
+
+            _fixBrokerageController = new FixBrokerageController(_symbolMapper);
+            // TODO: Handle Execution Report
+            // _fixBrokerageController.ExecutionReport += OnExecutionReport;
+
+            var fixProtocolDirector = new WEXFixProtocolDirector(_symbolMapper, fixConfiguration, _fixBrokerageController);
 
             _fixInstance = new FixInstance(fixProtocolDirector, fixConfiguration, logFixMessages);
 
-            _aggregator = aggregator;
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
             _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
-
-            // Useful for some brokerages:
-
-            // Brokerage helper class to lock websocket message stream while executing an action, for example placing an order
-            // avoid race condition with placing an order and getting filled events before finished placing
-            // _messageHandler = new BrokerageConcurrentMessageHandler<>();
-
-            // Rate gate limiter useful for API/WS calls
-            // _connectionRateLimiter = new RateGate();
         }
 
         #region IDataQueueHandler
@@ -215,12 +225,7 @@ namespace QuantConnect.WEX
         /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
         private bool Subscribe(IEnumerable<Symbol> symbols)
         {
-            foreach (var symbol in symbols)
-            {
-                _fixMarketDataController.Subscribe(symbol);
-            }
-
-            return true;
+            throw new NotImplementedException();
         }
 
         /// <summary>
