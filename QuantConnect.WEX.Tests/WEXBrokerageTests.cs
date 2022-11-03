@@ -1,9 +1,12 @@
-﻿using QuantConnect.Configuration;
+﻿using QuantConnect.Algorithm;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Brokerages;
 using QuantConnect.WEX.Fix;
@@ -17,6 +20,10 @@ namespace QuantConnect.WEX.Tests
     [TestFixture]
     public partial class WEXBrokerageTests
     {
+        private readonly QCAlgorithm _algorithm = new QCAlgorithm();
+        private readonly LiveNodePacket _job = new LiveNodePacket();
+
+        private readonly OrderProvider _orderProvider = new OrderProvider(new List<Order>());
         private readonly AggregationManager _aggregationManager = new AggregationManager();
 
         private readonly FixConfiguration _fixConfiguration = new FixConfiguration
@@ -33,8 +40,11 @@ namespace QuantConnect.WEX.Tests
         [Test]
         public void LogOnFixInstance()
         {
-            var marketDataController = new FixMarketDataController();
-            var fixProtocolDirector = new WEXFixProtocolDirector(_fixConfiguration, marketDataController);
+            var symbolMapper = new WEXSymbolMapper();
+
+            var brokerageController = new FixBrokerageController(symbolMapper);
+
+            var fixProtocolDirector = new WEXFixProtocolDirector(symbolMapper, _fixConfiguration, brokerageController);
 
             using var fixInstance = new FixInstance(fixProtocolDirector, _fixConfiguration, true);
 
@@ -42,7 +52,7 @@ namespace QuantConnect.WEX.Tests
 
             var sessionId = new SessionID(_fixConfiguration.FixVersionString, _fixConfiguration.SenderCompId, _fixConfiguration.TargetCompId);
 
-            Thread.Sleep(60000);
+            Thread.Sleep(35000);
 
             fixInstance.OnLogout(sessionId);
 
@@ -54,7 +64,7 @@ namespace QuantConnect.WEX.Tests
         [Test]
         public void SubscribeBrokerage()
         {
-            using (var brokerage = new WEXBrokerage(_aggregationManager, _fixConfiguration, true))
+            using (var brokerage = new WEXBrokerage(_algorithm, _job, _orderProvider, _aggregationManager, _fixConfiguration, true))
             {
                 brokerage.Connect();
                 Assert.IsTrue(brokerage.IsConnected);
