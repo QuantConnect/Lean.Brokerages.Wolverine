@@ -2,6 +2,7 @@
 using QuantConnect.WEX.Fix.Core;
 using QuantConnect.WEX.Fix.Protocol;
 using QuantConnect.WEX.Fix.Utils;
+using QuickFix;
 using QuickFix.Fields;
 using QuickFix.FIX42;
 
@@ -47,44 +48,18 @@ namespace QuantConnect.WEX.Wex
 
             var wexOrder = new NewOrderSingle
             {
-                ClOrdID = new ClOrdID(WEXOrderId.GetNext()),                
+                ClOrdID = new ClOrdID(WEXOrderId.GetNext()),
                 HandlInst = new HandlInst(HandlInst.AUTOMATED_EXECUTION_ORDER_PRIVATE_NO_BROKER_INTERVENTION),
-                // ExDestination = 
+                //ExDestination = new ExDestination("O"),
                 Symbol = new QuickFix.Fields.Symbol(ticker),
                 SecurityType = securityType,
-                MaturityMonthYear = new MaturityMonthYear(),
+                //MaturityMonthYear = new MaturityMonthYear(),
                 Side = side,
                 TransactTime = new TransactTime(DateTime.UtcNow),
                 OrderQty = new OrderQty(order.Quantity),
                 TimeInForce = Utility.ConvertTimeInForce(order.TimeInForce, order.Type),
-
-                // CBOE Curb Indicator - not required, WEX Support to properly set this up
-                // CustOrderCapacity - not required
-                // ClearingAccount - not required
-                // ClearingFirm - not required
-                // PegDifference - not required, required if OrdType is P = "Pegged" 
-                // MaxShow - not required
-                // CustomerOrFirm - not required
-                // Open/Close - not required
-                // Text - not required
-                // Rule80A/OrderCapacity - not required
-                // CommissionType - not required
-                // Commission - not required
-                // ExpireTime - not required
-                // EffectiveTime - not required
-                // Currency - not required
-                // LocateBroker - not required, required for Sell Short or Sell Short
-                // LocateReqd - not required, required for Sell Short or Sell Short
-                // SecurityDesc - not required
-                // SecurityExchange - not required
-                // MaturityDay - not required
-                // IDSource - not required
-                // SecurityID - not required 
-                // SymbolSfx - not required
-                // ExecBroker - not required | *Only use this tag if agreed upon with WEX
-                // ExecInst - not required
-                // MinQty - not required
-                // MaxFloor - not required
+                Rule80A = new Rule80A(Rule80A.AGENCY_SINGLE_ORDER),
+                //Account = required
             };
 
             if (order.Symbol.SecurityType == SecurityType.Option)
@@ -219,6 +194,18 @@ namespace QuantConnect.WEX.Wex
             //request.
 
             return _session.Send(request);
+        }
+
+        public void OnMessage(OrderCancelReject rejection, SessionID _)
+        {
+            // TODO: Handle Response
+            Logging.Log.Error($"Order cancellation failed: {rejection}");
+        }
+
+        public void OnMessage(ExecutionReport execution, SessionID _)
+        {
+            // TODO: Handle Response
+            Logging.Log.Error($"Order cancellation failed: {execution})");
         }
     }
 }

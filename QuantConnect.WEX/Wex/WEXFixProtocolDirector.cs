@@ -123,6 +123,7 @@ namespace QuantConnect.WEX.Wex
                 return 0;
 
             var textMsg = msg.GetString(Text.TAG);
+            Logging.Log.Trace($"WEX:logout: TAG<58>,text msg: {textMsg}");
             return textMsg.Contains("expected") ? Int32.Parse(System.Text.RegularExpressions.Regex.Match(textMsg, @"(?<=expected\s)[0-9]+").Value) : 0;
         }
     }

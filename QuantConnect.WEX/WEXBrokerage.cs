@@ -8,6 +8,9 @@ using QuantConnect.Brokerages;
 using QuantConnect.WEX.Fix;
 using QuantConnect.WEX.Wex;
 using QuantConnect.WEX.Fix.Core;
+using QuickFix.FIX42;
+using QuantConnect.Logging;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.WEX
 {
@@ -50,16 +53,12 @@ namespace QuantConnect.WEX
             _symbolMapper = new WEXSymbolMapper();
 
             _fixBrokerageController = new FixBrokerageController(_symbolMapper);
-            // TODO: Handle Execution Report
-            // _fixBrokerageController.ExecutionReport += OnExecutionReport;
+            _fixBrokerageController.ExecutionReport += OnExecutionReport;
 
             var fixProtocolDirector = new WEXFixProtocolDirector(_symbolMapper, fixConfiguration, _fixBrokerageController);
 
             _fixInstance = new FixInstance(fixProtocolDirector, fixConfiguration, logFixMessages);
 
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
-            _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
         }
 
         #region IDataQueueHandler
@@ -235,6 +234,55 @@ namespace QuantConnect.WEX
         private bool Unsubscribe(IEnumerable<Symbol> symbols)
         {
             throw new NotImplementedException();
+        }
+
+        private void OnExecutionReport(object sender, ExecutionReport e)
+        {
+            Log.Trace($"WexBrokerage:OnExecutionReport(): {sender}");
+
+            OrderStatus orderStatus = default;
+
+            var orderId = orderStatus == OrderStatus.Canceled || orderStatus == OrderStatus.UpdateSubmitted
+                ? e.OrigClOrdID.getValue()
+                : e.ClOrdID.getValue();
+            var time = e.TransactTime.getValue();
+
+            var order = _orderProvider.GetOrderByBrokerageId(orderId);
+
+            if (order == null)
+            {
+                Log.Error($"TradingTechnologiesBrokerage.OnExecutionReport(): Unable to locate order with BrokerageId: {orderId}");
+                return;
+            }
+
+            var message = "WEX Order Event";
+            if (e.IsSetText())
+            {
+                message += $" - {e.Text.getValue()}";
+            }
+
+            var orderEvent = new OrderEvent(order, time, OrderFee.Zero, message)
+            {
+                Status = orderStatus
+            };
+
+            if (orderStatus == OrderStatus.Filled || orderStatus == OrderStatus.PartiallyFilled)
+            {
+                var displayFactor = 0;
+
+                var filledQuantity = e.LastShares.getValue();
+                var remainingQuantity = order.AbsoluteQuantity - e.CumQty.getValue();
+
+                orderEvent.FillQuantity = filledQuantity * (order.Direction == OrderDirection.Buy ? 1 : -1);
+                orderEvent.FillPrice = e.LastPx.getValue() * displayFactor;
+
+                if (remainingQuantity > 0)
+                {
+                    orderEvent.Message += " - " + remainingQuantity + " remaining";
+                }
+            }
+
+            OnOrderEvent(orderEvent);
         }
     }
 }
