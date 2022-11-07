@@ -24,7 +24,8 @@ namespace QuantConnect.WEX
             { "wex-target-comp-id", Config.Get("wex-target-comp-id") },
             { "wex-host", Config.Get("wex-host") },
             { "wex-port", Config.Get("wex-port") },
-            { "wex-on-behalf-Of-comp-id", Config.Get("wex-on-behalf-Of-comp-id") }
+            { "wex-on-behalf-Of-comp-id", Config.Get("wex-on-behalf-Of-comp-id") },
+            { "wex-account", Config.Get("wex-account") }
         };
 
         /// <summary>

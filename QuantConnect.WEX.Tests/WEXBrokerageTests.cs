@@ -32,10 +32,13 @@ namespace QuantConnect.WEX.Tests
             TargetCompId = Config.Get("wex-target-comp-id"),
             Host = Config.Get("wex-host"),
             Port = Config.Get("wex-port"),
-            OnBehalfOfCompID = Config.Get("wex-on-behalf-Of-comp-id")
+            OnBehalfOfCompID = Config.Get("wex-on-behalf-Of-comp-id"),
+            Account = Config.Get("wex-account")
         };
 
-        private readonly Symbol _symbolIBMEquity = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+        private static readonly Symbol _symbolIBMEquity = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+        private static readonly Symbol _symbolINO = Symbol.Create("INO", SecurityType.Equity, Market.USA);
+        private static readonly Symbol _symbolNVAX = Symbol.Create("NVAX", SecurityType.Equity, Market.USA);
 
         [Test]
         public void LogOnFixInstance()
@@ -52,78 +55,62 @@ namespace QuantConnect.WEX.Tests
 
             var sessionId = new SessionID(_fixConfiguration.FixVersionString, _fixConfiguration.SenderCompId, _fixConfiguration.TargetCompId);
 
-            Thread.Sleep(35000);
+            Thread.Sleep(40000);
 
             fixInstance.OnLogout(sessionId);
 
             fixInstance.OnLogon(sessionId);
 
+            Thread.Sleep(40000);
+
             fixInstance.Terminate();
         }
 
-        [Test]
-        public void SubscribeBrokerage()
+        private static object[] _marketOrderTestCases =
+{
+            // Buy
+            //new TestCaseData(_symbolNVAX, 1),
+
+            // Sell
+            new TestCaseData(_symbolNVAX, -1),
+        };
+
+        [TestCaseSource(nameof(_marketOrderTestCases))]
+        public void SubmitsMarketOrder(Symbol symbol, int quantity)
         {
-            using (var brokerage = new WEXBrokerage(_algorithm, _job, _orderProvider, _aggregationManager, _fixConfiguration, true))
+            using (var brokerage = CreateBrokerage())
             {
+                var submittedEvent = new ManualResetEvent(false);
+                var filledEvent = new ManualResetEvent(false);
+
+                brokerage.OrderStatusChanged += (s, e) =>
+                {
+                    if (e.Status == OrderStatus.Submitted)
+                    {
+                        submittedEvent.Set();
+                    }
+                    else if (e.Status == OrderStatus.Filled)
+                    {
+                        filledEvent.Set();
+                    }
+                };
+
                 brokerage.Connect();
                 Assert.IsTrue(brokerage.IsConnected);
 
-                var dataConfig = new SubscriptionDataConfig(
-                typeof(Tick),
-                _symbolIBMEquity,
-                Resolution.Tick,
-                TimeZones.Utc,
-                TimeZones.Utc,
-                true,
-                true,
-                false);
+                var order = new MarketOrder(symbol, quantity, DateTime.UtcNow);
+                _orderProvider.Add(order);
 
-                var cts = new CancellationTokenSource();
-                ProcessFeed(
-                    brokerage.Subscribe(dataConfig, (s, e) => { }),
-                    cts,
-                    (tick) => {
-                        if (tick != null)
-                        {
-                            Log.Trace("{0}: {1} - {2} / {3}", tick.Time.ToStringInvariant("yyyy-MM-dd HH:mm:ss.fff"), tick.Symbol, (tick as Tick)?.BidPrice, (tick as Tick)?.AskPrice);
-                        }
-                    });
+                Assert.IsTrue(brokerage.PlaceOrder(order));
 
-                Thread.Sleep(20000);
-
-                //brokerage.Unsubscribe(dataConfig);
-
-                Thread.Sleep(5000);
-
-                cts.Cancel();
-
-                brokerage.Disconnect();
-                Assert.IsFalse(brokerage.IsConnected);
+                Assert.IsTrue(submittedEvent.WaitOne(TimeSpan.FromSeconds(10)));
+                Assert.IsTrue(filledEvent.WaitOne(TimeSpan.FromSeconds(10)));
             }
         }
 
-        private static void ProcessFeed(IEnumerator<BaseData> enumerator, CancellationTokenSource cts, Action<BaseData> callback = null)
+        private WEXBrokerage CreateBrokerage()
         {
-            Task.Factory.StartNew(() =>
-            {
-                try
-                {
-                    while (enumerator.MoveNext() && !cts.IsCancellationRequested)
-                    {
-                        var tick = enumerator.Current;
-                        callback?.Invoke(tick);
-                    }
-                }
-                catch (AssertionException)
-                {
-                    throw;
-                }
-                catch (Exception err)
-                {
-                    Console.WriteLine(err.Message);
-                }
-            }, cts.Token);
+            return new WEXBrokerage(_algorithm, _job, _orderProvider, _aggregationManager, _fixConfiguration, true);
         }
     }
 }

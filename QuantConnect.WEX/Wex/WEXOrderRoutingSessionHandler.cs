@@ -1,4 +1,6 @@
 ﻿using QuantConnect.Orders;
+using QuantConnect.Util;
+using QuantConnect.WEX.Fix;
 using QuantConnect.WEX.Fix.Core;
 using QuantConnect.WEX.Fix.Protocol;
 using QuantConnect.WEX.Fix.Utils;
@@ -14,11 +16,13 @@ namespace QuantConnect.WEX.Wex
 
         private readonly ISession _session;
         private readonly WEXSymbolMapper _symbolMapper;
+        private readonly FixConfiguration _fixConfiguration;
         private readonly IFixBrokerageController _fixBrokerageController;
 
-        public WEXOrderRoutingSessionHandler(WEXSymbolMapper symbolMapper, ISession session, IFixBrokerageController fixBrokerageController)
+        public WEXOrderRoutingSessionHandler(WEXSymbolMapper symbolMapper, ISession session, IFixBrokerageController fixBrokerageController, FixConfiguration fixConfiguration)
         {
             _symbolMapper = symbolMapper;
+            _fixConfiguration = fixConfiguration;
             _session = session ?? throw new ArgumentNullException(nameof(session));
             _fixBrokerageController = fixBrokerageController ?? throw new ArgumentNullException(nameof(fixBrokerageController));
 
@@ -49,17 +53,17 @@ namespace QuantConnect.WEX.Wex
             var wexOrder = new NewOrderSingle
             {
                 ClOrdID = new ClOrdID(WEXOrderId.GetNext()),
-                HandlInst = new HandlInst(HandlInst.AUTOMATED_EXECUTION_ORDER_PRIVATE_NO_BROKER_INTERVENTION),
+                HandlInst = new HandlInst(HandlInst.AUTOMATED_EXECUTION_ORDER_PUBLIC_BROKER_INTERVENTION_OK),
                 //ExDestination = new ExDestination("O"),
                 Symbol = new QuickFix.Fields.Symbol(ticker),
                 SecurityType = securityType,
                 //MaturityMonthYear = new MaturityMonthYear(),
                 Side = side,
                 TransactTime = new TransactTime(DateTime.UtcNow),
-                OrderQty = new OrderQty(order.Quantity),
+                OrderQty = new OrderQty(order.AbsoluteQuantity),
                 TimeInForce = Utility.ConvertTimeInForce(order.TimeInForce, order.Type),
                 Rule80A = new Rule80A(Rule80A.AGENCY_SINGLE_ORDER),
-                //Account = required
+                Account = new Account(_fixConfiguration.Account)
             };
 
             if (order.Symbol.SecurityType == SecurityType.Option)
@@ -198,14 +202,53 @@ namespace QuantConnect.WEX.Wex
 
         public void OnMessage(OrderCancelReject rejection, SessionID _)
         {
-            // TODO: Handle Response
-            Logging.Log.Error($"Order cancellation failed: {rejection}");
+            var reason = rejection.CxlRejReason.DescribeInt(rejection.IsSetCxlRejReason());
+            var responseTo = rejection.CxlRejResponseTo.DescribeChar(rejection.IsSetCxlRejResponseTo());
+            var text = rejection.IsSetText() ? rejection.Text.getValue() : "<no-text>";
+            Logging.Log.Error($"Order cancellation failed: {reason}: {text} (response to:{responseTo})");
         }
 
         public void OnMessage(ExecutionReport execution, SessionID _)
         {
-            // TODO: Handle Response
-            Logging.Log.Error($"Order cancellation failed: {execution})");
+            Logging.Log.Error($"WEXOrderRoutingSessionHandler: OnMessage(ExecutionReport _): {execution})");
+
+            var orderId = execution.OrderID.getValue();
+            var clOrdId = execution.IsSetClOrdID() ? execution.ClOrdID.getValue() : string.Empty;
+            var execType = execution.ExecType.getValue();
+
+            var orderStatus = Utility.ConvertOrderStatus(execution);
+
+            if (!clOrdId.IsNullOrEmpty())
+            {
+                if (orderStatus != OrderStatus.Invalid)
+                {
+                    Logging.Log.Trace($"ExecutionReport: Id: {orderId}, ClOrdId: {clOrdId}, ExecType: {execType}, OrderStatus: {orderStatus}");
+                }
+                else
+                {
+                    Logging.Log.Error($"ExecutionReport: Id: {orderId}, ClOrdId: {clOrdId}, ExecType: {execType}, OrderStatus: {orderStatus}");
+                }
+            }
+
+            // Total num orders will be set and have a value of 0 when the reply to OrderStatusRequest is indicating no open orders.
+            //var isStatusRequest = execution.IsSetField(execution..TotalNumOrders) || execution.IsSetExecTransType() && execution.ExecTransType.getValue() == ExecTransType.STATUS;
+
+            _fixBrokerageController.Receive(execution);
+
+            //if (!isStatusRequest || execution.TotalNumOrders.getValue() > 0)
+            //{
+            //    _fixBrokerageController.Receive(execution);
+
+            //    if (isStatusRequest)
+            //    {
+            //        _initialCount++;
+            //    }
+            //}
+
+            //if (isStatusRequest && execution.TotalNumOrders.getValue() == _initialCount)
+            //{
+            //    _fixBrokerageController.OnOpenOrdersReceived();
+            //}
         }
     }
 }

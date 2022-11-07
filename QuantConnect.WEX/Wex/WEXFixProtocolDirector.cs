@@ -111,7 +111,7 @@ namespace QuantConnect.WEX.Wex
         {
             if (senderCompId == _fixConfiguration.SenderCompId && targetCompId == _fixConfiguration.TargetCompId)
             {
-                return new WEXOrderRoutingSessionHandler(_symbolMapper, session, _fixBrokerageController);
+                return new WEXOrderRoutingSessionHandler(_symbolMapper, session, _fixBrokerageController, _fixConfiguration);
             }
 
             throw new Exception($"Unknown session senderCompId: '{senderCompId}'");

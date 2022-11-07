@@ -1,16 +1,16 @@
 ﻿using QuantConnect.Orders;
 using QuantConnect.WEX.Fix.Protocol;
+using QuantConnect.WEX.Fix.Utils;
+using QuickFix.Fields;
 using QuickFix.FIX42;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace QuantConnect.WEX.Fix.Core
 {
     public class FixBrokerageController : IFixBrokerageController
     {
+        private readonly ConcurrentDictionary<string, ExecutionReport> _orders = new ConcurrentDictionary<string, ExecutionReport>();
+
         private readonly WEXSymbolMapper _symbolMapper;
         private IFixOutboundBrokerageHandler _handler;
 
@@ -28,7 +28,10 @@ namespace QuantConnect.WEX.Fix.Core
 
         public List<Order> GetOpenOrders()
         {
-            throw new NotImplementedException();
+            return _orders.Values
+                .Select(ConvertOrder)
+                .Where(x => x.Status.IsOpen())
+                .ToList();
         }
 
         public void OnOpenOrdersReceived()
@@ -41,9 +44,25 @@ namespace QuantConnect.WEX.Fix.Core
             return _handler.PlaceOrder(order);
         }
 
-        public void Receive(ExecutionReport orderEvent)
+        public void Receive(ExecutionReport execution)
         {
-            throw new NotImplementedException();
+            if (execution == null)
+            {
+                throw new ArgumentNullException(nameof(execution));
+            }
+
+            var orderId = execution.ClOrdID.getValue();
+            var orderStatus = execution.OrdStatus.getValue();
+            if (orderStatus != OrdStatus.REJECTED)
+            {
+                _orders[orderId] = execution;
+            }
+            else
+            {
+                _orders.TryRemove(orderId, out _);
+            }
+
+            ExecutionReport?.Invoke(this, execution);
         }
 
         public void Register(IFixOutboundBrokerageHandler handler)
@@ -86,6 +105,71 @@ namespace QuantConnect.WEX.Fix.Core
         public bool UpdateOrder(Order order)
         {
             return _handler.UpdateOrder(order);
+        }
+
+        private Order ConvertOrder(ExecutionReport er)
+        {
+            if (er == null)
+            {
+                throw new ArgumentNullException(nameof(er));
+            }
+
+            var ticker = er.Symbol.getValue();
+            var securityType = _symbolMapper.GetLeanSecurityType(er.SecurityType.getValue());
+
+            //var market = _symbolMapper.GetLeanMarket(securityType, er.SecurityExchange.getValue(), ticker);
+
+            Symbol symbol = Symbol.Create(ticker, securityType, ticker);
+
+            var orderQuantity = er.OrderQty.getValue();
+            var orderSide = er.Side.getValue();
+            if (orderSide == Side.SELL)
+            {
+                orderQuantity = -orderQuantity;
+            }
+
+            var time = er.TransactTime.getValue();
+            var orderType = Utility.ConvertOrderType(er.OrdType.getValue());
+            var timeInForce = Utility.ConvertTimeInForce(er.TimeInForce.getValue());
+
+            Order order;
+            switch (orderType)
+            {
+                case OrderType.Market:
+                    order = new MarketOrder();
+                    break;
+
+                case OrderType.Limit:
+                    {
+                        var limitPrice = er.Price.getValue();
+                        order = new LimitOrder(symbol, orderQuantity, limitPrice, time);
+                    }
+                    break;
+
+                case OrderType.StopMarket:
+                    {
+                        var stopPrice = er.StopPx.getValue();
+                        order = new LimitOrder(symbol, orderQuantity, stopPrice, time);
+                    }
+                    break;
+
+                case OrderType.StopLimit:
+                    {
+                        var limitPrice = er.Price.getValue();
+                        var stopPrice = er.StopPx.getValue();
+                        order = new StopLimitOrder(symbol, orderQuantity, stopPrice, limitPrice, time);
+                    }
+                    break;
+
+                default:
+                    throw new NotSupportedException($"Unsupported order type: {orderType}");
+            }
+
+            order.Properties.TimeInForce = timeInForce;
+
+            order.BrokerId.Add(er.ClOrdID.getValue());
+
+            return order;
         }
     }
 }

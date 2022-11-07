@@ -46,5 +46,15 @@ namespace QuantConnect.WEX
 
             return securityTypeBrokerage;
         }
+
+        public SecurityType GetLeanSecurityType(string productType)
+        {
+            if (!_mapSecurityTypeToLeanSecurityType.TryGetValue(productType, out var securityType))
+            {
+                throw new NotSupportedException($"Unsupported TT ProductType: {productType}");
+            }
+
+            return securityType;
+        }
     }
 }
