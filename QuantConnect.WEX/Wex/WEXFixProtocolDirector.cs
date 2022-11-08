@@ -83,8 +83,6 @@ namespace QuantConnect.WEX.Wex
 
         public void OnLogon(SessionID sessionId)
         {
-            Logging.Log.Trace($"OnLogon(): Adding handler for SessionId: {sessionId}");
-
             var session = new QuickFixSession(sessionId);
             var handler = CreateSessionHandler(sessionId.SenderCompID, sessionId.TargetCompID, session);
             handler.IsReady = true;

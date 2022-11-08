@@ -108,10 +108,7 @@ namespace QuantConnect.WEX.Fix
         /// This method is called whenever a new session is created.
         /// </summary>
         /// <param name="sessionID"></param>
-        public void OnCreate(SessionID sessionID) 
-        {
-            Logging.Log.Trace($"admin level message: {sessionID.GetType().Name}: {sessionID}");
-        }
+        public void OnCreate(SessionID sessionID) { }
 
         /// <summary>
         /// Notifies when a successful logon has completed.

@@ -26,7 +26,12 @@ namespace QuantConnect.WEX.Fix
         public string TargetCompId { get; set; }
         public string Host { get; set; }
         public string Port { get; set; }
-        public string OnBehalfOfCompID { get; set; } // Fix Protocl tag 115
+
+        /// <summary>
+        /// Use in FIX LogOn in header of request 
+        /// </summary>
+        /// <remarks>Fix Protocl tag 115</remarks>
+        public string OnBehalfOfCompID { get; set; }
         public string Account { get; set; }
 
         public SessionSettings GetDefaultSessionSettings()
