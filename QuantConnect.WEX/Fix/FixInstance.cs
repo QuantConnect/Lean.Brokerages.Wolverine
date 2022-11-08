@@ -24,7 +24,6 @@ namespace QuantConnect.WEX.Fix
     public class FixInstance : IApplication, IDisposable
     {
         private readonly IFixProtocolDirector _protocolDirector;
-        private readonly FixConfiguration _fixConfiguration;
         private readonly SocketInitiator _initiator;
         private SecurityExchangeHours _securityExchangeHours;
 
@@ -33,7 +32,6 @@ namespace QuantConnect.WEX.Fix
         public FixInstance(IFixProtocolDirector protocolDirector, FixConfiguration fixConfiguration, bool logFixMessages)
         {
             _protocolDirector = protocolDirector ?? throw new ArgumentNullException(nameof(protocolDirector));
-            _fixConfiguration = fixConfiguration;
 
             var settings = fixConfiguration.GetDefaultSessionSettings();
 

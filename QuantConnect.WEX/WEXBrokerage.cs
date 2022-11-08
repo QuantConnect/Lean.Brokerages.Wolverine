@@ -44,8 +44,9 @@ namespace QuantConnect.WEX
     {
         private readonly IAlgorithm _algorithm;
         private readonly LiveNodePacket _job;
-        private readonly IOrderProvider _orderProvider;
         private readonly IDataAggregator _aggregator;
+        private readonly IOrderProvider _orderProvider;
+        private readonly ISecurityProvider _securityProvider;
 
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
@@ -67,13 +68,15 @@ namespace QuantConnect.WEX
             LiveNodePacket job, 
             IOrderProvider orderProvider, 
             IDataAggregator aggregator, 
-            FixConfiguration fixConfiguration, 
+            ISecurityProvider securityProvider,
+            FixConfiguration fixConfiguration,
             bool logFixMessages) : base("WEX")
         {
             _job = job;
             _algorithm = algorithm;
             _aggregator = aggregator;
             _orderProvider = orderProvider;
+            _securityProvider = securityProvider;
 
             _symbolMapper = new WEXSymbolMapper();
 
@@ -138,7 +141,7 @@ namespace QuantConnect.WEX
         /// <returns>The open orders returned from IB</returns>
         public override List<Order> GetOpenOrders()
         {
-            throw new NotImplementedException();
+            return new List<Order>();
         }
 
         /// <summary>
@@ -147,7 +150,7 @@ namespace QuantConnect.WEX
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            throw new NotImplementedException();
+            return GetAccountHoldings(_job.BrokerageData, (_securityProvider as SecurityPortfolioManager)?.Securities.Values);
         }
 
         /// <summary>
@@ -156,7 +159,7 @@ namespace QuantConnect.WEX
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<CashAmount> GetCashBalance()
         {
-            throw new NotImplementedException();
+            return GetCashBalance(_job.BrokerageData, (_securityProvider as SecurityPortfolioManager)?.CashBook);
         }
 
         /// <summary>
