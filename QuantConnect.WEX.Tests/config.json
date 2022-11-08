@@ -7,5 +7,6 @@
   "wex-host": "",
   "wex-port": "",
   "wex-on-behalf-Of-comp-id": "",
-  "wex-account": ""
+  "wex-account": "",
+  "wex-log-fix-messages" : "true"
 }

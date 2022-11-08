@@ -47,7 +47,7 @@ namespace QuantConnect.WEX.Tests
             TargetCompId = Config.Get("wex-target-comp-id"),
             Host = Config.Get("wex-host"),
             Port = Config.Get("wex-port"),
-            OnBehalfOfCompID = Config.Get("wex-on-behalf-Of-comp-id"),
+            OnBehalfOfCompID = Config.Get("wex-on-behalf-of-comp-id"),
             Account = Config.Get("wex-account")
         };
 

@@ -18,6 +18,9 @@ using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Configuration;
+using QuantConnect.WEX.Fix;
+using QuantConnect.Util;
+using QuantConnect.Data;
 
 namespace QuantConnect.WEX
 {
@@ -39,12 +42,13 @@ namespace QuantConnect.WEX
             { "wex-target-comp-id", Config.Get("wex-target-comp-id") },
             { "wex-host", Config.Get("wex-host") },
             { "wex-port", Config.Get("wex-port") },
-            { "wex-on-behalf-Of-comp-id", Config.Get("wex-on-behalf-Of-comp-id") },
-            { "wex-account", Config.Get("wex-account") }
+            { "wex-on-behalf-of-comp-id", Config.Get("wex-on-behalf-of-comp-id") },
+            { "wex-account", Config.Get("wex-account") },
+            { "wex-log-fix-messages", Config.Get("tt-log-fix-messages") }
         };
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TemplateBrokerageFactory"/> class
+        /// Initializes a new instance of the <see cref="WEXBrokerageFactory"/> class
         /// </summary>
         public WEXBrokerageFactory() : base(typeof(WEXBrokerage))
         {
@@ -64,7 +68,40 @@ namespace QuantConnect.WEX
         /// <returns>A new brokerage instance</returns>
         public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
-            throw new NotImplementedException();
+            var errors = new List<string>();
+
+            // read values from the brokerage data
+            var fixConfiguration = new FixConfiguration
+            {
+                Host = Read<string>(job.BrokerageData, "wex-host", errors),
+                Port = Read<string>(job.BrokerageData, "wex-port", errors),
+
+                SenderCompId = Read<string>(job.BrokerageData, "wex-sender-comp-id", errors),
+                TargetCompId = Read<string>(job.BrokerageData, "wex-target-comp-id", errors),
+
+                Account = Read<string>(job.BrokerageData, "wex-account", errors),
+                OnBehalfOfCompID = Read<string>(job.BrokerageData, "wex-on-behalf-of-comp-id", errors)
+            };
+
+            var logFixMessages = Read<bool>(job.BrokerageData, "wex-log-fix-messages", errors);
+
+            if (errors.Count != 0)
+            {
+                // if we had errors then we can't create the instance
+                throw new Exception(string.Join(Environment.NewLine, errors));
+            }
+
+            var instance = new WEXBrokerage(
+                algorithm,
+                job,
+                algorithm.Transactions,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                fixConfiguration,
+                logFixMessages);
+
+            Composer.Instance.AddPart<IDataQueueHandler>(instance);
+
+            return instance;
         }
 
         /// <summary>
