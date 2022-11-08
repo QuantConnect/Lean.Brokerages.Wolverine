@@ -6,5 +6,6 @@
   "wex-target-comp-id": "",
   "wex-host": "",
   "wex-port": "",
-  "wex-on-behalf-Of-comp-id": ""
+  "wex-on-behalf-Of-comp-id": "",
+  "wex-account": ""
 }
