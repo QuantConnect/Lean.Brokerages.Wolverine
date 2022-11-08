@@ -128,7 +128,7 @@ namespace QuantConnect.WEX.Fix.Core
                 orderQuantity = -orderQuantity;
             }
 
-            var time = er.TransactTime.getValue();
+            var time = er.IsSetTransactTime() ? er.TransactTime.getValue() : DateTime.UtcNow;
             var orderType = Utility.ConvertOrderType(er.OrdType.getValue());
             var timeInForce = Utility.ConvertTimeInForce(er.TimeInForce.getValue());
 

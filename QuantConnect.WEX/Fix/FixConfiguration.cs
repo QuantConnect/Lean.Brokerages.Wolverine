@@ -32,7 +32,7 @@ namespace QuantConnect.WEX.Fix
             defaultDic.SetBool("UseLocalTime", false);
             defaultDic.SetBool("SendLogoutBeforeDisconnectFromTimeout", false);
             defaultDic.SetString("HeartBtInt", "30");
-            defaultDic.SetString("LogonTimeout", "30");
+            defaultDic.SetString("LogonTimeout", "15");
 
             settings.Set(defaultDic);
 

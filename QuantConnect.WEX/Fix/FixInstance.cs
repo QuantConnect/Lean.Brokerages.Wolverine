@@ -24,7 +24,7 @@ namespace QuantConnect.WEX.Fix
 
             var storeFactory = new FileStoreFactory(settings);
             var logFactory = new QuickFixLogFactory(logFixMessages);
-            _initiator = new SocketInitiator(this, storeFactory, settings, logFactory);
+            _initiator = new SocketInitiator(this, storeFactory, settings, logFactory, protocolDirector.MessageFactory);
 
             _securityExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
         }

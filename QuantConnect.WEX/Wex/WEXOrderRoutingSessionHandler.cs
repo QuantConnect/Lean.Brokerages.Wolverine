@@ -10,14 +10,14 @@ using QuickFix.FIX42;
 
 namespace QuantConnect.WEX.Wex
 {
-    public class WEXOrderRoutingSessionHandler : WEXFixSessionHandlerBase, IFixOutboundBrokerageHandler
+    public class WEXOrderRoutingSessionHandler : MessageCracker, IWEXFixSessionHandler, IFixOutboundBrokerageHandler
     {
-        private int _initialCount;
-
         private readonly ISession _session;
         private readonly WEXSymbolMapper _symbolMapper;
         private readonly FixConfiguration _fixConfiguration;
         private readonly IFixBrokerageController _fixBrokerageController;
+
+        public bool IsReady { get; set; }
 
         public WEXOrderRoutingSessionHandler(WEXSymbolMapper symbolMapper, ISession session, IFixBrokerageController fixBrokerageController, FixConfiguration fixConfiguration)
         {
@@ -27,11 +27,6 @@ namespace QuantConnect.WEX.Wex
             _fixBrokerageController = fixBrokerageController ?? throw new ArgumentNullException(nameof(fixBrokerageController));
 
             fixBrokerageController.Register(this);
-        }
-
-        protected override void OnRecoveryCompleted()
-        {
-            IsReady = true;
         }
 
         public bool CancelOrder(Order order)
@@ -230,25 +225,17 @@ namespace QuantConnect.WEX.Wex
                 }
             }
 
-            // Total num orders will be set and have a value of 0 when the reply to OrderStatusRequest is indicating no open orders.
-            //var isStatusRequest = execution.IsSetField(execution..TotalNumOrders) || execution.IsSetExecTransType() && execution.ExecTransType.getValue() == ExecTransType.STATUS;
+            var isStatusRequest = execution.IsSetExecTransType() && execution.ExecTransType.getValue() == ExecTransType.STATUS;
 
-            _fixBrokerageController.Receive(execution);
+            if (!isStatusRequest)
+            {
+                _fixBrokerageController.Receive(execution);
+            }
 
-            //if (!isStatusRequest || execution.TotalNumOrders.getValue() > 0)
-            //{
-            //    _fixBrokerageController.Receive(execution);
-
-            //    if (isStatusRequest)
-            //    {
-            //        _initialCount++;
-            //    }
-            //}
-
-            //if (isStatusRequest && execution.TotalNumOrders.getValue() == _initialCount)
-            //{
-            //    _fixBrokerageController.OnOpenOrdersReceived();
-            //}
+            if (isStatusRequest)
+            {
+                _fixBrokerageController.OnOpenOrdersReceived();
+            }
         }
     }
 }

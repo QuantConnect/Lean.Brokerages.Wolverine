@@ -69,7 +69,7 @@ namespace QuantConnect.WEX.Tests
         private static object[] _marketOrderTestCases =
 {
             // Buy
-            //new TestCaseData(_symbolNVAX, 1),
+            new TestCaseData(_symbolNVAX, 1),
 
             // Sell
             new TestCaseData(_symbolNVAX, -1),
@@ -105,6 +105,56 @@ namespace QuantConnect.WEX.Tests
 
                 Assert.IsTrue(submittedEvent.WaitOne(TimeSpan.FromSeconds(10)));
                 Assert.IsTrue(filledEvent.WaitOne(TimeSpan.FromSeconds(10)));
+            }
+        }
+
+        private static readonly object[] _limitOrderTestCases =
+{
+            // Buy below market price
+            new TestCaseData(_symbolNVAX, 1, 12.30m),
+
+            // Sell above market price
+            new TestCaseData(_symbolNVAX, -1, 25.60m),
+
+            // Buy above market price
+            new TestCaseData(_symbolNVAX, 1, 19.60m),
+
+            // Sell below market price
+            new TestCaseData(_symbolNVAX, -1, 19.30m),
+        };
+
+        [Ignore("The logic hasn't completed yet")]
+        [TestCaseSource(nameof(_limitOrderTestCases))]
+        public void SubmitsLimitOrder(Symbol symbol, int quantity, decimal limitPriceOffsetTicks)
+        {
+            using (var brokerage = CreateBrokerage())
+            {
+                var submittedEvent = new ManualResetEvent(false);
+                var filledEvent = new ManualResetEvent(false);
+
+                brokerage.OrderStatusChanged += (s, e) =>
+                {
+                    if (e.Status == OrderStatus.Submitted)
+                    {
+                        submittedEvent.Set();
+                    }
+                    else if (e.Status == OrderStatus.Filled)
+                    {
+                        filledEvent.Set();
+                    }
+                };
+
+                brokerage.Connect();
+                Assert.IsTrue(brokerage.IsConnected);
+
+                var limitPrice = limitPriceOffsetTicks;
+
+                var order = new LimitOrder(symbol, quantity, limitPrice, DateTime.UtcNow);
+                _orderProvider.Add(order);
+
+                Assert.IsTrue(brokerage.PlaceOrder(order));
+
+                Assert.IsTrue(submittedEvent.WaitOne(TimeSpan.FromSeconds(10)));
             }
         }
 

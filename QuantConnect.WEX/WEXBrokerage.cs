@@ -11,6 +11,7 @@ using QuantConnect.WEX.Fix.Core;
 using QuickFix.FIX42;
 using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
+using QuantConnect.WEX.Fix.Utils;
 
 namespace QuantConnect.WEX
 {
@@ -176,7 +177,12 @@ namespace QuantConnect.WEX
         /// </summary>
         public override void Disconnect()
         {
-            throw new NotImplementedException();
+            _fixInstance.Terminate();
+        }
+
+        public override void Dispose()
+        {
+            _fixInstance.DisposeSafely();
         }
 
         #endregion
@@ -240,18 +246,19 @@ namespace QuantConnect.WEX
         {
             Log.Trace($"WexBrokerage:OnExecutionReport(): {sender}");
 
-            OrderStatus orderStatus = default;
+            OrderStatus orderStatus = Utility.ConvertOrderStatus(e);
 
             var orderId = orderStatus == OrderStatus.Canceled || orderStatus == OrderStatus.UpdateSubmitted
                 ? e.OrigClOrdID.getValue()
                 : e.ClOrdID.getValue();
+
             var time = e.TransactTime.getValue();
 
             var order = _orderProvider.GetOrderByBrokerageId(orderId);
 
             if (order == null)
             {
-                Log.Error($"TradingTechnologiesBrokerage.OnExecutionReport(): Unable to locate order with BrokerageId: {orderId}");
+                Log.Error($"WEX.OnExecutionReport(): Unable to locate order with BrokerageId: {orderId}");
                 return;
             }
 

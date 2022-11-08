@@ -33,7 +33,7 @@ namespace QuantConnect.WEX.Wex
 
         public bool AreSessionsReady()
         {
-            return _sessionHandlers.Values.All(handler => handler.IsReady);
+            return _sessionHandlers.IsEmpty ? false : _sessionHandlers.Values.All(handler => handler.IsReady);
         }
 
         public void EnrichOutbound(Message msg)
@@ -41,6 +41,7 @@ namespace QuantConnect.WEX.Wex
             switch (msg)
             {
                 case Logon logon:
+                    logon.Header.SetField(new MsgSeqNum(_expectedMsgSeqNumLogOn == 0 ? 1 : _expectedMsgSeqNumLogOn));
                     logon.SetField(new EncryptMethod(EncryptMethod.NONE));
                     logon.SetField(new OnBehalfOfCompID(_fixConfiguration.OnBehalfOfCompID));
                     break;
@@ -71,14 +72,12 @@ namespace QuantConnect.WEX.Wex
 
             var session = new QuickFixSession(sessionId);
             var handler = CreateSessionHandler(sessionId.SenderCompID, sessionId.TargetCompID, session);
+            handler.IsReady = true;
             _sessionHandlers[sessionId] = handler;
 
-            // Crutch: to logOn with correct MsgSeqNum
+            // Crutch: to logOn with correct MsgSeqNum: Reset Value
             if (_expectedMsgSeqNumLogOn != 0)
-            {
-                Session.LookupSession(sessionId).NextSenderMsgSeqNum = _expectedMsgSeqNumLogOn;
                 _expectedMsgSeqNumLogOn = 0;
-            }
         }
 
         public void OnLogout(SessionID sessionId)
