@@ -26,15 +26,11 @@ namespace QuantConnect.WEX.Fix.Core
     {
         private readonly ConcurrentDictionary<string, ExecutionReport> _orders = new ConcurrentDictionary<string, ExecutionReport>();
 
-        private readonly WEXSymbolMapper _symbolMapper;
         private IFixOutboundBrokerageHandler _handler;
 
         public event EventHandler<ExecutionReport> ExecutionReport;
 
-        public FixBrokerageController(WEXSymbolMapper symbolMapper)
-        {
-            _symbolMapper = symbolMapper;
-        }
+        public FixBrokerageController() { }
 
         public bool CancelOrder(Order order)
         {

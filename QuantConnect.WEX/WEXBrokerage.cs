@@ -72,7 +72,7 @@ namespace QuantConnect.WEX
 
             _symbolMapper = new WEXSymbolMapper();
 
-            _fixBrokerageController = new FixBrokerageController(_symbolMapper);
+            _fixBrokerageController = new FixBrokerageController();
             _fixBrokerageController.ExecutionReport += OnExecutionReport;
 
             var fixProtocolDirector = new WEXFixProtocolDirector(_symbolMapper, fixConfiguration, _fixBrokerageController);
@@ -164,34 +164,6 @@ namespace QuantConnect.WEX
         }
 
         #endregion
-
-        private bool CanSubscribe(Symbol symbol)
-        {
-            if (symbol.Value.IndexOfInvariant("universe", true) != -1)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Adds the specified symbols to the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be added keyed by SecurityType</param>
-        private bool Subscribe(IEnumerable<Symbol> symbols)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Removes the specified symbols to the subscription
-        /// </summary>
-        /// <param name="symbols">The symbols to be removed keyed by SecurityType</param>
-        private bool Unsubscribe(IEnumerable<Symbol> symbols)
-        {
-            throw new NotImplementedException();
-        }
 
         private void OnExecutionReport(object sender, ExecutionReport e)
         {

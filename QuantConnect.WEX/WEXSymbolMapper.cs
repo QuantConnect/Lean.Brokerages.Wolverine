@@ -19,12 +19,6 @@ namespace QuantConnect.WEX
 {
     public class WEXSymbolMapper : ISymbolMapper
     {
-        // WEX SecurityExchange -> Lean market
-        private readonly Dictionary<string, string> _mapSecurityExchangeToLeanMarket = new Dictionary<string, string>
-        {
-            { "ICE", Market.ICE }
-        };
-
         // WEX SecurityType -> LEAN security type
         private readonly Dictionary<string, SecurityType> _mapSecurityTypeToLeanSecurityType = new Dictionary<string, SecurityType>
         {
@@ -60,16 +54,6 @@ namespace QuantConnect.WEX
             }
 
             return securityTypeBrokerage;
-        }
-
-        public SecurityType GetLeanSecurityType(string productType)
-        {
-            if (!_mapSecurityTypeToLeanSecurityType.TryGetValue(productType, out var securityType))
-            {
-                throw new NotSupportedException($"Unsupported TT ProductType: {productType}");
-            }
-
-            return securityType;
         }
     }
 }

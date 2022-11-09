@@ -96,41 +96,5 @@ namespace QuantConnect.WEX.Fix.Utils
                     return OrderStatus.Invalid;
             }
         }
-
-        public static OrderType ConvertOrderType(char orderType)
-        {
-            switch (orderType)
-            {
-                case QF.OrdType.MARKET:
-                    return OrderType.Market;
-
-                case QF.OrdType.LIMIT:
-                    return OrderType.Limit;
-
-                case QF.OrdType.STOP:
-                    return OrderType.StopMarket;
-
-                case QF.OrdType.STOP_LIMIT:
-                    return OrderType.StopLimit;
-
-                default:
-                    throw new NotSupportedException($"Unsupported order type: {orderType}");
-            }
-        }
-
-        public static TimeInForce ConvertTimeInForce(char timeInForce)
-        {
-            switch (timeInForce)
-            {
-                case QF.TimeInForce.GOOD_TILL_CANCEL:
-                    return TimeInForce.GoodTilCanceled;
-
-                case QF.TimeInForce.DAY:
-                    return TimeInForce.Day;
-
-                default:
-                    throw new NotSupportedException($"Unsupported TimeInForce: {timeInForce}");
-            }
-        }
     }
 }
