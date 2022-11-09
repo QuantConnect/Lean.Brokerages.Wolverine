@@ -96,7 +96,6 @@ namespace QuantConnect.WEX
                 job,
                 algorithm.Transactions,
                 Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
-                algorithm.Portfolio,
                 fixConfiguration,
                 logFixMessages);
 

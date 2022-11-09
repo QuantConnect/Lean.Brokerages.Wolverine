@@ -46,7 +46,6 @@ namespace QuantConnect.WEX
         private readonly LiveNodePacket _job;
         private readonly IDataAggregator _aggregator;
         private readonly IOrderProvider _orderProvider;
-        private readonly ISecurityProvider _securityProvider;
 
         private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
@@ -67,8 +66,7 @@ namespace QuantConnect.WEX
             IAlgorithm algorithm, 
             LiveNodePacket job, 
             IOrderProvider orderProvider, 
-            IDataAggregator aggregator, 
-            ISecurityProvider securityProvider,
+            IDataAggregator aggregator,
             FixConfiguration fixConfiguration,
             bool logFixMessages) : base("WEX")
         {
@@ -76,7 +74,6 @@ namespace QuantConnect.WEX
             _algorithm = algorithm;
             _aggregator = aggregator;
             _orderProvider = orderProvider;
-            _securityProvider = securityProvider;
 
             _symbolMapper = new WEXSymbolMapper();
 
@@ -150,7 +147,7 @@ namespace QuantConnect.WEX
         /// <returns>The current holdings from the account</returns>
         public override List<Holding> GetAccountHoldings()
         {
-            return GetAccountHoldings(_job.BrokerageData, (_securityProvider as SecurityPortfolioManager)?.Securities.Values);
+            return GetAccountHoldings(_job.BrokerageData, _algorithm.Securities.Values);
         }
 
         /// <summary>
@@ -159,7 +156,7 @@ namespace QuantConnect.WEX
         /// <returns>The current cash balance for each currency available for trading</returns>
         public override List<CashAmount> GetCashBalance()
         {
-            return GetCashBalance(_job.BrokerageData, (_securityProvider as SecurityPortfolioManager)?.CashBook);
+            return GetCashBalance(_job.BrokerageData, _algorithm.Portfolio.CashBook);
         }
 
         /// <summary>
