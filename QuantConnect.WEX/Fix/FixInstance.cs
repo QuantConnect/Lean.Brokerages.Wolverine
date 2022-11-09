@@ -14,13 +14,17 @@
 */
 
 using QuickFix;
+using QuantConnect.Util;
 using QuickFix.Transport;
+using QuantConnect.Securities;
 using QuantConnect.WEX.Fix.Protocol;
 using QuantConnect.WEX.Fix.LogFactory;
-using QuantConnect.Securities;
 
 namespace QuantConnect.WEX.Fix
 {
+    /// <summary>
+    /// TODO: docs
+    /// </summary>
     public class FixInstance : IApplication, IDisposable
     {
         private readonly IFixProtocolDirector _protocolDirector;
@@ -28,7 +32,13 @@ namespace QuantConnect.WEX.Fix
         private SecurityExchangeHours _securityExchangeHours;
 
         private bool _disposed;
+        private volatile bool _connected;
         private CancellationTokenSource _cancellationTokenSource;
+
+        /// <summary>
+        /// TODO: docs
+        /// </summary>
+        public event EventHandler<FixError> Error;
 
         public FixInstance(IFixProtocolDirector protocolDirector, FixConfiguration fixConfiguration, bool logFixMessages)
         {
@@ -40,60 +50,46 @@ namespace QuantConnect.WEX.Fix
             var logFactory = new QuickFixLogFactory(logFixMessages);
             _initiator = new SocketInitiator(this, storeFactory, settings, logFactory, protocolDirector.MessageFactory);
 
-            _cancellationTokenSource = new CancellationTokenSource();
             _securityExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
         }
 
-        public bool IsConnected()
-        {
-            return !_initiator.IsStopped &&
-                   _initiator.GetSessionIDs()
-                        .Select(Session.LookupSession)
-                        .All(session => session != null && session.IsLoggedOn);
-        }
+        public bool IsConnected() => _connected && !_disposed;
 
-        public void Initialise()
+        public void Initialize()
         {
-            if (_initiator.IsStopped)
-            {
-                _initiator.Start();
-            }
-
-            var token = _cancellationTokenSource.Token;
+            _connected = TryConnect();
+            _cancellationTokenSource = new CancellationTokenSource();
 
             Task.Factory.StartNew(() =>
             {
-                while(true)
-                {
-                    if (IsConnected() && _protocolDirector.AreSessionsReady())
-                        break;
+                Logging.Log.Trace($"FixInstance(): starting fix connection monitor...");
 
-                    Thread.Sleep(500);
-                }    
-            }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-
-            Task.Factory.StartNew(() =>
-            {
+                var retry = 0;
                 var timeoutLoop = TimeSpan.FromMinutes(1);
-
                 while (!_cancellationTokenSource.Token.IsCancellationRequested)
                 {
-                    _cancellationTokenSource.Token.WaitHandle.WaitOne(timeoutLoop);
-
-                    try
+                    if (_cancellationTokenSource.Token.WaitHandle.WaitOne(timeoutLoop))
                     {
-                        if(_initiator.IsStopped && !IsExchangeOpen(extendedMarketHours: true))
-                        {
-                            _initiator.Start();
+                        // exit time
+                        break;
+                    }
 
-                            Thread.Sleep(100);
+                    if (!TryConnect())
+                    {
+                        Logging.Log.Error($"FixInstance(): connection failed");
+
+                        if (++retry >= 5)
+                        {
+                            // after retrying to connect for X times & exchange is open we should die
+                            Error?.Invoke(this, new FixError { Message = "Fix connection failed" });
                         }
                     }
-                    catch(Exception ex)
+                    else
                     {
-                        Logging.Log.Error(ex);
+                        retry = 0;
                     }
                 }
+                Logging.Log.Trace($"FixInstance(): ending connection monitor");
             });
         }
 
@@ -174,6 +170,9 @@ namespace QuantConnect.WEX.Fix
 
         public void Terminate()
         {
+            _connected = false;
+            // stop fix connection monitor
+            _cancellationTokenSource.Cancel();
             if (!_initiator.IsStopped)
             {
                 _initiator.Stop();
@@ -187,9 +186,34 @@ namespace QuantConnect.WEX.Fix
                 return;
             }
 
-            _cancellationTokenSource?.Cancel();
             _disposed = true;
-            _initiator.Dispose();
+            _initiator.DisposeSafely();
+            _cancellationTokenSource.DisposeSafely();
+        }
+
+        private bool TryConnect()
+        {
+            try
+            {
+                if (_initiator.IsStopped && IsExchangeOpen(extendedMarketHours: true))
+                {
+                    // while the exchange is open and we are not connected, let's try to connect
+                    _initiator.Start();
+
+                    // TODO: there's a potential race condition here? Will the 'Start()' call above resolve completely or we need to wait for a login reply message to come in
+                    return !_initiator.IsStopped && _initiator.GetSessionIDs().Select(Session.LookupSession).All(session => session != null && session.IsLoggedOn);
+                }
+
+                // we are already connected or exchange is closed
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logging.Log.Error(ex);
+            }
+
+            // something failed
+            return false;
         }
     }
 }

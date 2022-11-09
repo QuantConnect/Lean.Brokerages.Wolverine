@@ -78,7 +78,11 @@ namespace QuantConnect.WEX
             var fixProtocolDirector = new WEXFixProtocolDirector(_symbolMapper, fixConfiguration, _fixBrokerageController);
 
             _fixInstance = new FixInstance(fixProtocolDirector, fixConfiguration, logFixMessages);
-
+            _fixInstance.Error += (object? sender, FixError e) =>
+            {
+                // error event will kill the algorithm
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, -1, e.Message));
+            };
             ValidateSubscription();
         }
 
@@ -147,7 +151,7 @@ namespace QuantConnect.WEX
         /// </summary>
         public override void Connect()
         {
-            _fixInstance.Initialise();
+            _fixInstance.Initialize();
         }
 
         /// <summary>

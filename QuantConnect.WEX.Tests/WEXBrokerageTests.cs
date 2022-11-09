@@ -193,7 +193,7 @@ namespace QuantConnect.WEX.Tests
 
             using var fixInstance = new FixInstance(fixProtocolDirector, _fixConfiguration, true);
 
-            fixInstance.Initialise();
+            fixInstance.Initialize();
 
             var sessionId = new SessionID(_fixConfiguration.FixVersionString, _fixConfiguration.SenderCompId, _fixConfiguration.TargetCompId);
 
