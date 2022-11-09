@@ -167,8 +167,6 @@ namespace QuantConnect.WEX
 
         private void OnExecutionReport(object sender, ExecutionReport e)
         {
-            Log.Trace($"WexBrokerage:OnExecutionReport(): {sender}");
-
             OrderStatus orderStatus = Utility.ConvertOrderStatus(e);
 
             var orderId = orderStatus == OrderStatus.Canceled || orderStatus == OrderStatus.UpdateSubmitted
@@ -181,7 +179,6 @@ namespace QuantConnect.WEX
 
             if (order == null)
             {
-                Log.Error($"WEX.OnExecutionReport(): Unable to locate order with BrokerageId: {orderId}");
                 return;
             }
 
