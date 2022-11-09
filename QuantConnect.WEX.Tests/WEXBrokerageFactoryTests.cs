@@ -13,20 +13,15 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
-
 namespace QuantConnect.WEX.Tests
 {
-    [TestFixture]
-    public class TemplateBrokerageAdditionalTests
+    public class WEXBrokerageFactoryTests
     {
         [Test]
-        public void ParameterlessConstructorComposerUsage()
+        public void InitializesFactoryFromComposer()
         {
-            var brokerage = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>("TemplateBrokerage");
-            Assert.IsNotNull(brokerage);
+            using var factory = Composer.Instance.Single<IBrokerageFactory>(instance => instance.BrokerageType == typeof(WEXBrokerage));
+            Assert.IsNotNull(factory);
         }
     }
 }

@@ -13,26 +13,10 @@
  * limitations under the License.
 */
 
-using QuantConnect.Algorithm;
-using QuantConnect.Configuration;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Logging;
-using QuantConnect.Orders;
-using QuantConnect.Packets;
-using QuantConnect.Securities;
-using QuantConnect.Tests.Brokerages;
-using QuantConnect.WEX.Fix;
-using QuantConnect.WEX.Fix.Core;
-using QuantConnect.WEX.Wex;
-using QuickFix;
-using Log = QuantConnect.Logging.Log;
-
 namespace QuantConnect.WEX.Tests
 {
     [TestFixture]
+    [Explicit("These tests require a valid WEX configuration.")]
     public partial class WEXBrokerageTests
     {
         private readonly QCAlgorithm _algorithm = new QCAlgorithm();
@@ -48,36 +32,47 @@ namespace QuantConnect.WEX.Tests
             Port = Config.Get("wex-port"),
             OnBehalfOfCompID = Config.Get("wex-on-behalf-of-comp-id"),
             Account = Config.Get("wex-account")
+
         };
 
-        private static readonly Symbol _symbolIBMEquity = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
-        private static readonly Symbol _symbolINO = Symbol.Create("INO", SecurityType.Equity, Market.USA);
+        private static readonly Symbol _invalidSymbol = Symbol.Create("XY", SecurityType.Equity, Market.USA);
         private static readonly Symbol _symbolNVAX = Symbol.Create("NVAX", SecurityType.Equity, Market.USA);
 
         [Test]
-        public void LogOnFixInstance()
+        public void ClientConnects()
         {
-            var symbolMapper = new WEXSymbolMapper();
+            using (var brokerage = CreateBrokerage())
+            {
+                Assert.IsFalse(brokerage.IsConnected);
 
-            var brokerageController = new FixBrokerageController(symbolMapper);
+                brokerage.Connect();
+                Assert.IsTrue(brokerage.IsConnected);
 
-            var fixProtocolDirector = new WEXFixProtocolDirector(symbolMapper, _fixConfiguration, brokerageController);
+                brokerage.Disconnect();
+                Assert.IsFalse(brokerage.IsConnected);
+            }
+        }
 
-            using var fixInstance = new FixInstance(fixProtocolDirector, _fixConfiguration, true);
+        [Test]
+        public void GetsAccountHoldings()
+        {
+            using (var brokerage = CreateBrokerage())
+            {
+                Assert.IsFalse(brokerage.IsConnected);
 
-            fixInstance.Initialise();
+                brokerage.Connect();
+                Assert.IsTrue(brokerage.IsConnected);
 
-            var sessionId = new SessionID(_fixConfiguration.FixVersionString, _fixConfiguration.SenderCompId, _fixConfiguration.TargetCompId);
+                var holdings = brokerage.GetAccountHoldings();
+                foreach (var holding in holdings)
+                {
+                    Log.Trace($"Holding: {holding}");
+                }
+                Log.Trace($"Holdings: {holdings.Count}");
 
-            Thread.Sleep(40000);
-
-            fixInstance.OnLogout(sessionId);
-
-            fixInstance.OnLogon(sessionId);
-
-            Thread.Sleep(40000);
-
-            fixInstance.Terminate();
+                brokerage.Disconnect();
+                Assert.IsFalse(brokerage.IsConnected);
+            }
         }
 
         private static object[] _marketOrderTestCases =
@@ -122,54 +117,95 @@ namespace QuantConnect.WEX.Tests
             }
         }
 
-        private static readonly object[] _limitOrderTestCases =
-{
-            // Buy below market price
-            new TestCaseData(_symbolNVAX, 1, 12.30m),
-
-            // Sell above market price
-            new TestCaseData(_symbolNVAX, -1, 25.60m),
-
-            // Buy above market price
-            new TestCaseData(_symbolNVAX, 1, 19.60m),
-
-            // Sell below market price
-            new TestCaseData(_symbolNVAX, -1, 19.30m),
-        };
-
-        [Ignore("The logic hasn't completed yet")]
-        [TestCaseSource(nameof(_limitOrderTestCases))]
-        public void SubmitsLimitOrder(Symbol symbol, int quantity, decimal limitPriceOffsetTicks)
+        [Test]
+        public void SubmitsMarketOrderForInvalidConfiguration()
         {
+            var symbol = _symbolNVAX;
+
+            _fixConfiguration.Account = "XYZ";
+
             using (var brokerage = CreateBrokerage())
             {
-                var submittedEvent = new ManualResetEvent(false);
-                var filledEvent = new ManualResetEvent(false);
+                var invalidEvent = new ManualResetEvent(false);
 
                 brokerage.OrderStatusChanged += (s, e) =>
                 {
-                    if (e.Status == OrderStatus.Submitted)
+                    if (e.Status == OrderStatus.Invalid)
                     {
-                        submittedEvent.Set();
-                    }
-                    else if (e.Status == OrderStatus.Filled)
-                    {
-                        filledEvent.Set();
+                        Assert.That(e.Message.EndsWith($"Invalid account {_fixConfiguration.Account}") ||
+                                    e.Message.EndsWith("Trading Technologies Order Event"));
+
+                        invalidEvent.Set();
                     }
                 };
 
                 brokerage.Connect();
                 Assert.IsTrue(brokerage.IsConnected);
 
-                var limitPrice = limitPriceOffsetTicks;
-
-                var order = new LimitOrder(symbol, quantity, limitPrice, DateTime.UtcNow);
+                var order = new MarketOrder(symbol, 1, DateTime.UtcNow);
                 _orderProvider.Add(order);
 
                 Assert.IsTrue(brokerage.PlaceOrder(order));
 
-                Assert.IsTrue(submittedEvent.WaitOne(TimeSpan.FromSeconds(10)));
+                Assert.IsTrue(invalidEvent.WaitOne(TimeSpan.FromSeconds(5)));
             }
+        }
+
+        [Test]
+        public void SubmitsMarketOrderForInvalidSymbol()
+        {
+            var symbol = _invalidSymbol;
+
+            using (var brokerage = CreateBrokerage())
+            {
+                var invalidEvent = new ManualResetEvent(false);
+
+                brokerage.OrderStatusChanged += (s, e) =>
+                {
+                    if (e.Status == OrderStatus.Invalid)
+                    {
+                        Assert.That(e.Message.Contains("Lookup by name failed") || e.Message.Contains("No instrument found"));
+
+                        invalidEvent.Set();
+                    }
+                };
+
+                brokerage.Connect();
+                Assert.IsTrue(brokerage.IsConnected);
+
+                var order = new MarketOrder(symbol, 1, DateTime.UtcNow);
+                _orderProvider.Add(order);
+
+                Assert.IsTrue(brokerage.PlaceOrder(order));
+
+                Assert.IsTrue(invalidEvent.WaitOne(TimeSpan.FromSeconds(5)));
+            }
+        }
+
+        [Test]
+        public void CanLogonAfterLogout()
+        {
+            var symbolMapper = new WEXSymbolMapper();
+
+            var brokerageController = new FixBrokerageController();
+
+            var fixProtocolDirector = new WEXFixProtocolDirector(symbolMapper, _fixConfiguration, brokerageController);
+
+            using var fixInstance = new FixInstance(fixProtocolDirector, _fixConfiguration, true);
+
+            fixInstance.Initialise();
+
+            var sessionId = new SessionID(_fixConfiguration.FixVersionString, _fixConfiguration.SenderCompId, _fixConfiguration.TargetCompId);
+
+            Thread.Sleep(20000);
+
+            fixInstance.OnLogout(sessionId);
+
+            fixInstance.OnLogon(sessionId);
+
+            Thread.Sleep(20000);
+
+            fixInstance.Terminate();
         }
 
         private WEXBrokerage CreateBrokerage()

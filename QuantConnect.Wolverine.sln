@@ -15,11 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Tests", "..\Le
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.ToolBox", "..\Lean\ToolBox\QuantConnect.ToolBox.csproj", "{88885A3A-5028-4EFB-9244-47FDB04725CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.WEX", "QuantConnect.WEX\QuantConnect.WEX.csproj", "{4E33C7FC-43FB-477B-B798-9ECAEA1025FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.WEX", "QuantConnect.WEX\QuantConnect.WEX.csproj", "{4E33C7FC-43FB-477B-B798-9ECAEA1025FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.WEX.ToolBox", "QuantConnect.WEX.ToolBox\QuantConnect.WEX.ToolBox.csproj", "{CE3AE937-E674-4F86-828C-38BBD54CFFA5}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.WEX.Tests", "QuantConnect.WEX.Tests\QuantConnect.WEX.Tests.csproj", "{78FB3A52-FA73-4E1D-BB19-7F814DB73688}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.WEX.Tests", "QuantConnect.WEX.Tests\QuantConnect.WEX.Tests.csproj", "{78FB3A52-FA73-4E1D-BB19-7F814DB73688}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,10 +53,6 @@ Global
 		{4E33C7FC-43FB-477B-B798-9ECAEA1025FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E33C7FC-43FB-477B-B798-9ECAEA1025FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E33C7FC-43FB-477B-B798-9ECAEA1025FB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CE3AE937-E674-4F86-828C-38BBD54CFFA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CE3AE937-E674-4F86-828C-38BBD54CFFA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CE3AE937-E674-4F86-828C-38BBD54CFFA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CE3AE937-E674-4F86-828C-38BBD54CFFA5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{78FB3A52-FA73-4E1D-BB19-7F814DB73688}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{78FB3A52-FA73-4E1D-BB19-7F814DB73688}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78FB3A52-FA73-4E1D-BB19-7F814DB73688}.Release|Any CPU.ActiveCfg = Release|Any CPU
