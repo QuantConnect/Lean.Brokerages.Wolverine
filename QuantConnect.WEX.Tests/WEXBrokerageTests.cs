@@ -39,7 +39,6 @@ namespace QuantConnect.WEX.Tests
         private readonly LiveNodePacket _job = new LiveNodePacket();
 
         private readonly OrderProvider _orderProvider = new OrderProvider(new List<Order>());
-        private readonly AggregationManager _aggregationManager = new AggregationManager();
 
         private readonly FixConfiguration _fixConfiguration = new FixConfiguration
         {
@@ -175,7 +174,7 @@ namespace QuantConnect.WEX.Tests
 
         private WEXBrokerage CreateBrokerage()
         {
-            return new WEXBrokerage(_algorithm, _job, _orderProvider, _aggregationManager, _fixConfiguration, true);
+            return new WEXBrokerage(_algorithm, _job, _orderProvider, _fixConfiguration, true);
         }
     }
 }

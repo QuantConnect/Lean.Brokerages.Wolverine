@@ -51,7 +51,7 @@ namespace QuantConnect.WEX.Tests
         {
             TestDelegate test = () =>
             {
-                var brokerage = new WEXBrokerage(null, null, null, null, null, false);
+                var brokerage = new WEXBrokerage(null, null, null, null, false);
 
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);

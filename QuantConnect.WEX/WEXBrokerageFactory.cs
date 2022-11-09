@@ -94,8 +94,7 @@ namespace QuantConnect.WEX
             var instance = new WEXBrokerage(
                 algorithm,
                 job,
-                algorithm.Transactions,
-                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager")),
+                algorithm.Transactions,                
                 fixConfiguration,
                 logFixMessages);
 

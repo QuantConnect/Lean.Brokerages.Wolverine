@@ -44,10 +44,7 @@ namespace QuantConnect.WEX
     {
         private readonly IAlgorithm _algorithm;
         private readonly LiveNodePacket _job;
-        private readonly IDataAggregator _aggregator;
         private readonly IOrderProvider _orderProvider;
-
-        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
         private readonly IFixBrokerageController _fixBrokerageController;
         private readonly FixInstance _fixInstance;
@@ -66,13 +63,11 @@ namespace QuantConnect.WEX
             IAlgorithm algorithm, 
             LiveNodePacket job, 
             IOrderProvider orderProvider, 
-            IDataAggregator aggregator,
             FixConfiguration fixConfiguration,
             bool logFixMessages) : base("WEX")
         {
             _job = job;
             _algorithm = algorithm;
-            _aggregator = aggregator;
             _orderProvider = orderProvider;
 
             _symbolMapper = new WEXSymbolMapper();
@@ -97,15 +92,7 @@ namespace QuantConnect.WEX
         /// <returns>The new enumerator for this subscription request</returns>
         public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
         {
-            if (!CanSubscribe(dataConfig.Symbol))
-            {
-                return Enumerable.Empty<BaseData>().GetEnumerator();
-            }
-
-            var enumerator = _aggregator.Add(dataConfig, newDataAvailableHandler);
-            _subscriptionManager.Subscribe(dataConfig);
-
-            return enumerator;
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -114,8 +101,7 @@ namespace QuantConnect.WEX
         /// <param name="dataConfig">Subscription config to be removed</param>
         public void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
-            _subscriptionManager.Unsubscribe(dataConfig);
-            _aggregator.Remove(dataConfig);
+            throw new NotImplementedException();
         }
 
         /// <summary>
