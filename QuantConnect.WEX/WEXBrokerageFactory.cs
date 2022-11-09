@@ -98,8 +98,6 @@ namespace QuantConnect.WEX
                 fixConfiguration,
                 logFixMessages);
 
-            Composer.Instance.AddPart<IDataQueueHandler>(instance);
-
             return instance;
         }
 

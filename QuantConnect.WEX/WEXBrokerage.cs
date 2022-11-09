@@ -40,7 +40,7 @@ using Newtonsoft.Json.Linq;
 namespace QuantConnect.WEX
 {
     [BrokerageFactory(typeof(WEXBrokerageFactory))]
-    public class WEXBrokerage : Brokerage, IDataQueueHandler
+    public class WEXBrokerage : Brokerage
     {
         private readonly IAlgorithm _algorithm;
         private readonly LiveNodePacket _job;
@@ -81,39 +81,6 @@ namespace QuantConnect.WEX
 
             ValidateSubscription();
         }
-
-        #region IDataQueueHandler
-
-        /// <summary>
-        /// Subscribe to the specified configuration
-        /// </summary>
-        /// <param name="dataConfig">defines the parameters to subscribe to a data feed</param>
-        /// <param name="newDataAvailableHandler">handler to be fired on new data available</param>
-        /// <returns>The new enumerator for this subscription request</returns>
-        public IEnumerator<BaseData> Subscribe(SubscriptionDataConfig dataConfig, EventHandler newDataAvailableHandler)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Removes the specified configuration
-        /// </summary>
-        /// <param name="dataConfig">Subscription config to be removed</param>
-        public void Unsubscribe(SubscriptionDataConfig dataConfig)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Sets the job we're subscribing for
-        /// </summary>
-        /// <param name="job">Job we're subscribing for</param>
-        public void SetJob(LiveNodePacket job)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
 
         #region Brokerage
 
