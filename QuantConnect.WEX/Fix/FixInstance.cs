@@ -28,6 +28,7 @@ namespace QuantConnect.WEX.Fix
         private SecurityExchangeHours _securityExchangeHours;
 
         private bool _disposed;
+        private CancellationTokenSource _cancellationTokenSource;
 
         public FixInstance(IFixProtocolDirector protocolDirector, FixConfiguration fixConfiguration, bool logFixMessages)
         {
@@ -39,6 +40,7 @@ namespace QuantConnect.WEX.Fix
             var logFactory = new QuickFixLogFactory(logFixMessages);
             _initiator = new SocketInitiator(this, storeFactory, settings, logFactory, protocolDirector.MessageFactory);
 
+            _cancellationTokenSource = new CancellationTokenSource();
             _securityExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
         }
 
@@ -52,27 +54,47 @@ namespace QuantConnect.WEX.Fix
 
         public void Initialise()
         {
-            if (!IsExchangeOpen(extendedMarketHours: true))
-            {
-                Logging.Log.Error($"WEX.Initialise(ExchangeOpen: false)");
-                return;
-            }
-
             if (_initiator.IsStopped)
             {
                 _initiator.Start();
-
-                var start = DateTime.UtcNow;
-                while (!IsConnected() || !_protocolDirector.AreSessionsReady())
-                {
-                    if (DateTime.UtcNow > start.AddSeconds(60))
-                    {
-                        throw new TimeoutException("Timeout initializing FIX sessions.");
-                    }
-
-                    Thread.Sleep(1000);
-                }
             }
+
+            var token = _cancellationTokenSource.Token;
+
+            Task.Factory.StartNew(() =>
+            {
+                while(true)
+                {
+                    if (IsConnected() && _protocolDirector.AreSessionsReady())
+                        break;
+
+                    Thread.Sleep(500);
+                }    
+            }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+
+            Task.Factory.StartNew(() =>
+            {
+                var timeoutLoop = TimeSpan.FromMinutes(1);
+
+                while (!_cancellationTokenSource.Token.IsCancellationRequested)
+                {
+                    _cancellationTokenSource.Token.WaitHandle.WaitOne(timeoutLoop);
+
+                    try
+                    {
+                        if(_initiator.IsStopped && !IsExchangeOpen(extendedMarketHours: true))
+                        {
+                            _initiator.Start();
+
+                            Thread.Sleep(100);
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        Logging.Log.Error(ex);
+                    }
+                }
+            });
         }
 
         /// <summary>
@@ -165,6 +187,7 @@ namespace QuantConnect.WEX.Fix
                 return;
             }
 
+            _cancellationTokenSource?.Cancel();
             _disposed = true;
             _initiator.Dispose();
         }
