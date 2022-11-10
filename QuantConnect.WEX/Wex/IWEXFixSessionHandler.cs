@@ -13,20 +13,14 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using QuantConnect.Interfaces;
-using QuantConnect.Util;
+using QuickFix;
 
-namespace QuantConnect.TemplateBrokerage.Tests
+namespace QuantConnect.WEX.Wex
 {
-    [TestFixture, Ignore("This test requires a configured TemplateBrokerageFactory")]
-    public class TemplateBrokerageFactoryTests
+    public interface IWEXFixSessionHandler
     {
-        [Test]
-        public void InitializesFactoryFromComposer()
-        {
-            using var factory = Composer.Instance.Single<IBrokerageFactory>(instance => instance.BrokerageType == typeof(TemplateBrokerage));
-            Assert.IsNotNull(factory);
-        }
+        bool IsReady { get; set; }
+
+        void Crack(Message message, SessionID sessionId);
     }
 }

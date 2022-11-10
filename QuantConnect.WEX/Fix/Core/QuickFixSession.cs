@@ -13,20 +13,27 @@
  * limitations under the License.
 */
 
-using NUnit.Framework;
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
+using QuickFix;
 
-namespace QuantConnect.TemplateBrokerage.Tests
+namespace QuantConnect.WEX.Fix.Core
 {
-    [TestFixture]
-    public class TemplateBrokerageAdditionalTests
+    public class QuickFixSession : ISession
     {
-        [Test]
-        public void ParameterlessConstructorComposerUsage()
+        private readonly Session _session;
+
+        public QuickFixSession(SessionID sessionId)
         {
-            var brokerage = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>("TemplateBrokerage");
-            Assert.IsNotNull(brokerage);
+            if (sessionId == null)
+            {
+                throw new ArgumentNullException(nameof(sessionId));
+            }
+
+            _session = Session.LookupSession(sessionId) ?? throw new SessionNotFound(sessionId);
+        }
+
+        public bool Send(Message message)
+        {
+            return _session.Send(message);
         }
     }
 }

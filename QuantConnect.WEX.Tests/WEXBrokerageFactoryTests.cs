@@ -13,28 +13,15 @@
  * limitations under the License.
 */
 
-using QuantConnect.ToolBox;
-using System.Collections.Generic;
-
-namespace QuantConnect.TemplateBrokerage.ToolBox
+namespace QuantConnect.WEX.Tests
 {
-    /// <summary>
-    /// Template Brokerage implementation of <see cref="IExchangeInfoDownloader"/>
-    /// </summary>
-    public class TemplateExchangeInfoDownloader : IExchangeInfoDownloader
+    public class WEXBrokerageFactoryTests
     {
-        /// <summary>
-        /// Market
-        /// </summary>
-        public string Market => throw new System.NotImplementedException();
-
-        /// <summary>
-        /// Get exchange info coma-separated data
-        /// </summary>
-        /// <returns>Enumerable of exchange info for this market</returns>
-        public IEnumerable<string> Get()
+        [Test]
+        public void InitializesFactoryFromComposer()
         {
-            throw new System.NotImplementedException();
+            using var factory = Composer.Instance.Single<IBrokerageFactory>(instance => instance.BrokerageType == typeof(WEXBrokerage));
+            Assert.IsNotNull(factory);
         }
     }
 }

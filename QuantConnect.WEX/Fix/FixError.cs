@@ -13,25 +13,16 @@
  * limitations under the License.
 */
 
-using System;
-using QuantConnect.Data;
-using System.Collections.Generic;
-
-namespace QuantConnect.TemplateBrokerage.ToolBox
+namespace QuantConnect.WEX.Fix
 {
     /// <summary>
-    /// Template Brokerage Data Downloader implementation
+    /// Class is used to return error message from FIX protocol pipeline
     /// </summary>
-    public class TemplateBrokerageDownloader : IDataDownloader
+    public class FixError
     {
         /// <summary>
-        /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
+        /// Gets the custom message
         /// </summary>
-        /// <param name="dataDownloaderGetParameters">model class for passing in parameters for historical data</param>
-        /// <returns>Enumerable of base data for this symbol</returns>
-        public IEnumerable<BaseData> Get(DataDownloaderGetParameters dataDownloaderGetParameters)
-        {
-            throw new NotImplementedException();
-        }
+        public string Message { get; set; }
     }
 }

@@ -13,14 +13,7 @@
  * limitations under the License.
 */
 
-using System;
-using System.IO;
-using NUnit.Framework;
-using System.Collections;
-using QuantConnect.Logging;
-using QuantConnect.Configuration;
-
-namespace QuantConnect.TemplateBrokerage.Tests
+namespace QuantConnect.WEX.Tests
 {
     [TestFixture]
     public class TestSetup
