@@ -34,8 +34,9 @@
 		<PackageReference Include="QuickFIXn.FIX4.2" Version="1.10.0" />
 	</ItemGroup>
 	<ItemGroup>
-	  <None Update="Wolverine-FIX42.xml">
+	  <None Update="Wolverine-FIX42.xml" Pack="True">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	    <PackageCopyToOutput>true</PackageCopyToOutput>
 	  </None>
 	</ItemGroup>
 </Project>
