@@ -35,7 +35,11 @@ namespace QuantConnect.WEX.Fix
         private bool _disposed;
         private volatile bool _connected;
         private CancellationTokenSource _cancellationTokenSource;
-        private ManualResetEvent _manualResetEvent = new ManualResetEvent(false);
+
+        /// <summary>
+        /// Thread synchronization event, for successful LogOn
+        /// </summary>
+        private ManualResetEvent _successLoginEvent = new ManualResetEvent(false);
 
         /// <summary>
         /// Event invoke to show problem with FIX protocol
@@ -59,8 +63,8 @@ namespace QuantConnect.WEX.Fix
 
         public void Initialize()
         {
-            _connected = TryConnect();
             _cancellationTokenSource = new CancellationTokenSource();
+            _connected = TryConnect();
 
             Task.Factory.StartNew(() =>
             {
@@ -135,7 +139,8 @@ namespace QuantConnect.WEX.Fix
         public void OnLogon(SessionID sessionID)
         {
             _protocolDirector.OnLogon(sessionID);
-            _manualResetEvent.Set();
+            _successLoginEvent.Set();
+            _successLoginEvent.Reset();
         }
 
         /// <summary>
@@ -203,8 +208,10 @@ namespace QuantConnect.WEX.Fix
                     // while the exchange is open and we are not connected, let's try to connect
                     _initiator.Start();
 
-                    if (!_manualResetEvent.WaitOne(TimeSpan.FromSeconds(30)))
+                    if (!_successLoginEvent.WaitOne(TimeSpan.FromSeconds(30), _cancellationTokenSource.Token))
+                    {
                         Logging.Log.Error("Timeout initializing FIX sessions.");
+                    }
 
                     return !_initiator.IsStopped 
                         && _initiator.GetSessionIDs().Select(Session.LookupSession).All(session => session != null && session.IsLoggedOn) 
