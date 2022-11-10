@@ -16,7 +16,7 @@
 namespace QuantConnect.WEX.Fix
 {
     /// <summary>
-    /// Class is used to return error message from FIX protocl piepline
+    /// Class is used to return error message from FIX protocol pipeline
     /// </summary>
     public class FixError
     {

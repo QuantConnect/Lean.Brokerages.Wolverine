@@ -35,6 +35,7 @@ namespace QuantConnect.WEX.Fix
         private bool _disposed;
         private volatile bool _connected;
         private CancellationTokenSource _cancellationTokenSource;
+        private ManualResetEvent _manualResetEvent = new ManualResetEvent(false);
 
         /// <summary>
         /// Event invoke to show problem with FIX protocol
@@ -134,6 +135,7 @@ namespace QuantConnect.WEX.Fix
         public void OnLogon(SessionID sessionID)
         {
             _protocolDirector.OnLogon(sessionID);
+            _manualResetEvent.Set();
         }
 
         /// <summary>
@@ -199,10 +201,14 @@ namespace QuantConnect.WEX.Fix
                 if (_initiator.IsStopped && IsExchangeOpen(extendedMarketHours: true))
                 {
                     // while the exchange is open and we are not connected, let's try to connect
-                    StartConnection();
+                    _initiator.Start();
 
-                    // TODO: there's a potential race condition here? Will the 'Start()' call above resolve completely or we need to wait for a login reply message to come in
-                    return IsConnectedAllSession() && _protocolDirector.AreSessionsReady();
+                    if (!_manualResetEvent.WaitOne(TimeSpan.FromSeconds(30)))
+                        Logging.Log.Error("Timeout initializing FIX sessions.");
+
+                    return !_initiator.IsStopped 
+                        && _initiator.GetSessionIDs().Select(Session.LookupSession).All(session => session != null && session.IsLoggedOn) 
+                        && _protocolDirector.AreSessionsReady();
                 }
 
                 // we are already connected or exchange is closed
@@ -215,30 +221,6 @@ namespace QuantConnect.WEX.Fix
 
             // something failed
             return false;
-        }
-
-        private void StartConnection()
-        {
-            _initiator.Start();
-
-            var connectionCheckerCounter = 0;
-
-            while(!IsConnectedAllSession() || !_protocolDirector.AreSessionsReady())
-            {
-                connectionCheckerCounter++;
-
-                if (connectionCheckerCounter > 10)
-                    break;
-
-                Thread.Sleep(1000);
-            }
-        }
-        private bool IsConnectedAllSession()
-        {
-            return !_initiator.IsStopped &&
-                   _initiator.GetSessionIDs()
-                        .Select(Session.LookupSession)
-                        .All(session => session != null && session.IsLoggedOn);
         }
     }
 }

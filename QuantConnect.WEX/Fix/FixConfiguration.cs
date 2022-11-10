@@ -40,7 +40,7 @@ namespace QuantConnect.WEX.Fix
 
             var defaultDic = new Dictionary();
             defaultDic.SetString("ConnectionType", "initiator");
-            defaultDic.SetString("ReconnectInterval", "30");
+            defaultDic.SetString("ReconnectInterval", "5");
             defaultDic.SetString("FileStorePath", @"store");
             defaultDic.SetString("FileLogPath", "log");
             defaultDic.SetString("StartTime", "00:00:00");
