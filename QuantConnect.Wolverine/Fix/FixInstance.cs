@@ -107,8 +107,6 @@ namespace QuantConnect.Wolverine.Fix
         public void FromAdmin(Message message, SessionID sessionID) 
         {
              _protocolDirector.HandleAdminMessage(message);
-            // TODO:
-            //_successLoginEvent.Set();
         }
 
         /// <summary>
@@ -141,6 +139,7 @@ namespace QuantConnect.Wolverine.Fix
         public void OnLogon(SessionID sessionID)
         {
             _protocolDirector.OnLogon(sessionID);
+            _successLoginEvent.Set();
         }
 
         /// <summary>

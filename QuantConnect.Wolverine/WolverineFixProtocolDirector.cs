@@ -56,7 +56,6 @@ namespace QuantConnect.Wolverine
             switch (msg)
             {
                 case Logon logon:
-                    logon.Header.SetField(new MsgSeqNum(_expectedMsgSeqNumLogOn == 0 ? 1 : _expectedMsgSeqNumLogOn));
                     //logon.SetField(new ResetSeqNumFlag(ResetSeqNumFlag.YES));
                     logon.SetField(new EncryptMethod(EncryptMethod.NONE));
                     logon.SetField(new OnBehalfOfCompID(_fixConfiguration.OnBehalfOfCompID));
@@ -85,6 +84,7 @@ namespace QuantConnect.Wolverine
         public void OnLogon(SessionID sessionId)
         {
             var session = new QuickFixSession(sessionId);
+
             var handler = CreateSessionHandler(sessionId.SenderCompID, sessionId.TargetCompID, session);
             handler.IsReady = true;
             _sessionHandlers[sessionId] = handler;
@@ -97,6 +97,10 @@ namespace QuantConnect.Wolverine
         public void OnLogout(SessionID sessionId)
         {
             Logging.Log.Trace($"OnLogout(): Removing handler for SessionId: {sessionId}");
+
+            // TODO: ideally we could send the reset request on login
+            //Session.LookupSession(sessionId).NextTargetMsgSeqNum = _expectedMsgSeqNumLogOn;
+            Session.LookupSession(sessionId).NextSenderMsgSeqNum = _expectedMsgSeqNumLogOn;
 
             if (_sessionHandlers.TryRemove(sessionId, out var handler))
             {
