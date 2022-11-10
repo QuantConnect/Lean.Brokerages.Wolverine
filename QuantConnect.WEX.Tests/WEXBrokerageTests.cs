@@ -117,6 +117,7 @@ namespace QuantConnect.WEX.Tests
             }
         }
 
+        [Ignore("We cannot test in paper connection")]
         [Test]
         public void SubmitsMarketOrderForInvalidConfiguration()
         {
@@ -151,6 +152,7 @@ namespace QuantConnect.WEX.Tests
             }
         }
 
+        [Ignore("We cannot test in paper connection")]
         [Test]
         public void SubmitsMarketOrderForInvalidSymbol()
         {

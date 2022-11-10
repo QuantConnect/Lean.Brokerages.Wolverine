@@ -183,6 +183,7 @@ namespace QuantConnect.WEX
 
             if (order == null)
             {
+                Log.Error($"WEX.OnExecutionReport(): Unable to locate order with BrokerageId: {orderId}");
                 return;
             }
 
