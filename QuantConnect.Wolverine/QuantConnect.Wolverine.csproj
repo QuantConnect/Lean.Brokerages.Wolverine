@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+		<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Product>QuantConnect.Wolverine</Product>
+		<AssemblyName>QuantConnect.Wolverine</AssemblyName>
+		<RootNamespace>QuantConnect.Wolverine</RootNamespace>
+		<AssemblyTitle>QuantConnect.Wolverine</AssemblyTitle>
+		<OutputType>Library</OutputType>
+		<OutputPath>bin\$(Configuration)\</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<Description>QuantConnect LEAN Wolverine Brokerage: Wolverine Brokerage plugin for Lean</Description>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<DebugType>full</DebugType>
+		<OutputPath>bin\Debug\</OutputPath>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+		<DebugType>pdbonly</DebugType>
+		<OutputPath>bin\Release\</OutputPath>
+	</PropertyGroup>
+	<ItemGroup>
+		<Compile Include="..\..\Lean\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+		<PackageReference Include="QuantConnect.Brokerages" Version="2.5.*" />
+		<PackageReference Include="QuickFIXn.Core" Version="1.10.0" />
+		<PackageReference Include="QuickFIXn.FIX4.2" Version="1.10.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Update="Wolverine-FIX42.xml" Pack="True">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	    <PackageCopyToOutput>true</PackageCopyToOutput>
+	  </None>
+	</ItemGroup>
+</Project>

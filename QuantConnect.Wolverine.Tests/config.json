@@ -1,0 +1,12 @@
+{
+  "data-folder": "../../../../Lean/Data/",
+  "data-directory": "../../../../Lean/Data/",
+
+  "wolverine-sender-comp-id": "",
+  "wolverine-target-comp-id": "",
+  "wolverine-host": "",
+  "wolverine-port": "",
+  "wolverine-on-behalf-of-comp-id": "",
+  "wolverine-account": "",
+  "wolverine-log-fix-messages": "false"
+}
