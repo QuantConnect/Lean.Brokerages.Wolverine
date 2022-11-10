@@ -213,6 +213,11 @@ namespace QuantConnect.WEX.Fix
                         Logging.Log.Error("Timeout initializing FIX sessions.");
                     }
 
+                    if(_cancellationTokenSource.IsCancellationRequested)
+                    {
+                        return false;
+                    }
+
                     return !_initiator.IsStopped 
                         && _initiator.GetSessionIDs().Select(Session.LookupSession).All(session => session != null && session.IsLoggedOn) 
                         && _protocolDirector.AreSessionsReady();
