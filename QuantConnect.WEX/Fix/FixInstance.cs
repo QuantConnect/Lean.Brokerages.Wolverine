@@ -202,7 +202,7 @@ namespace QuantConnect.WEX.Fix
                     StartConnection();
 
                     // TODO: there's a potential race condition here? Will the 'Start()' call above resolve completely or we need to wait for a login reply message to come in
-                    return !_initiator.IsStopped && _initiator.GetSessionIDs().Select(Session.LookupSession).All(session => session != null && session.IsLoggedOn);
+                    return IsConnectedAllSession() && _protocolDirector.AreSessionsReady();
                 }
 
                 // we are already connected or exchange is closed
@@ -223,11 +223,7 @@ namespace QuantConnect.WEX.Fix
 
             var connectionCheckerCounter = 0;
 
-            while(!_initiator.IsStopped &&
-                   _initiator.GetSessionIDs()
-                        .Select(Session.LookupSession)
-                        .All(session => session != null && session.IsLoggedOn) 
-                  && _protocolDirector.AreSessionsReady())
+            while(!IsConnectedAllSession() || !_protocolDirector.AreSessionsReady())
             {
                 connectionCheckerCounter++;
 
@@ -236,6 +232,13 @@ namespace QuantConnect.WEX.Fix
 
                 Thread.Sleep(1000);
             }
+        }
+        private bool IsConnectedAllSession()
+        {
+            return !_initiator.IsStopped &&
+                   _initiator.GetSessionIDs()
+                        .Select(Session.LookupSession)
+                        .All(session => session != null && session.IsLoggedOn);
         }
     }
 }
