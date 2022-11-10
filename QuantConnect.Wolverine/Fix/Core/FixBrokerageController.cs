@@ -15,7 +15,6 @@
 
 using QuantConnect.Orders;
 using QuantConnect.Wolverine.Fix.Protocol;
-using QuantConnect.Wolverine.Fix.Utils;
 using QuickFix.Fields;
 using QuickFix.FIX42;
 using System.Collections.Concurrent;
