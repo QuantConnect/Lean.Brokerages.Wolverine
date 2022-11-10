@@ -16,12 +16,12 @@
 namespace QuantConnect.WEX.Fix
 {
     /// <summary>
-    /// TODO: docs
+    /// Class is used to return error message from FIX protocl piepline
     /// </summary>
     public class FixError
     {
         /// <summary>
-        /// Gets the message
+        /// Gets the custom message
         /// </summary>
         public string Message { get; set; }
     }

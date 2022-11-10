@@ -23,7 +23,8 @@ using QuantConnect.WEX.Fix.LogFactory;
 namespace QuantConnect.WEX.Fix
 {
     /// <summary>
-    /// TODO: docs
+    /// The instance of a single QuickFIX/n configuration
+    /// This includes session to interact between client and brokerage.
     /// </summary>
     public class FixInstance : IApplication, IDisposable
     {
@@ -36,7 +37,7 @@ namespace QuantConnect.WEX.Fix
         private CancellationTokenSource _cancellationTokenSource;
 
         /// <summary>
-        /// TODO: docs
+        /// Event invoke to show problem with FIX protocol
         /// </summary>
         public event EventHandler<FixError> Error;
 
