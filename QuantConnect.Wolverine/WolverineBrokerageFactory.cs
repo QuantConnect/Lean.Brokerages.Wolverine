@@ -44,7 +44,10 @@ namespace QuantConnect.Wolverine
             { "wolverine-target-comp-id", Config.Get("wolverine-target-comp-id") },
             { "wolverine-on-behalf-of-comp-id", Config.Get("wolverine-on-behalf-of-comp-id") },
 
-            { "wolverine-log-fix-messages", Config.Get("wolverine-log-fix-messages") }
+            { "wolverine-log-fix-messages", Config.Get("wolverine-log-fix-messages") },
+
+            { "live-cash-balance", Config.Get("live-cash-balance")},
+            { "live-holdings", Config.Get("live-holdings")},
         };
 
         /// <summary>
