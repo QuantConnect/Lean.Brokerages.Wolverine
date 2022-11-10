@@ -199,7 +199,7 @@ namespace QuantConnect.WEX.Fix
                 if (_initiator.IsStopped && IsExchangeOpen(extendedMarketHours: true))
                 {
                     // while the exchange is open and we are not connected, let's try to connect
-                    _initiator.Start();
+                    StartConnection();
 
                     // TODO: there's a potential race condition here? Will the 'Start()' call above resolve completely or we need to wait for a login reply message to come in
                     return !_initiator.IsStopped && _initiator.GetSessionIDs().Select(Session.LookupSession).All(session => session != null && session.IsLoggedOn);
@@ -215,6 +215,27 @@ namespace QuantConnect.WEX.Fix
 
             // something failed
             return false;
+        }
+
+        private void StartConnection()
+        {
+            _initiator.Start();
+
+            var connectionCheckerCounter = 0;
+
+            while(!_initiator.IsStopped &&
+                   _initiator.GetSessionIDs()
+                        .Select(Session.LookupSession)
+                        .All(session => session != null && session.IsLoggedOn) 
+                  && _protocolDirector.AreSessionsReady())
+            {
+                connectionCheckerCounter++;
+
+                if (connectionCheckerCounter > 10)
+                    break;
+
+                Thread.Sleep(1000);
+            }
         }
     }
 }
