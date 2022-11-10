@@ -2,11 +2,11 @@
   "data-folder": "../../../../Lean/Data/",
   "data-directory": "../../../../Lean/Data/",
 
-  "wex-sender-comp-id": "",
-  "wex-target-comp-id": "",
-  "wex-host": "",
-  "wex-port": "",
-  "wex-on-behalf-Of-comp-id": "",
-  "wex-account": "",
-  "wex-log-fix-messages" : "true"
+  "wolverine-sender-comp-id": "",
+  "wolverine-target-comp-id": "",
+  "wolverine-host": "",
+  "wolverine-port": "",
+  "wolverine-on-behalf-of-comp-id": "",
+  "wolverine-account": "",
+  "wolverine-log-fix-messages": "false"
 }

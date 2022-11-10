@@ -106,7 +106,9 @@ namespace QuantConnect.Wolverine.Fix
         /// <param name="sessionID"></param>
         public void FromAdmin(Message message, SessionID sessionID) 
         {
-            _protocolDirector.HandleAdminMessage(message);
+             _protocolDirector.HandleAdminMessage(message);
+            // TODO:
+            //_successLoginEvent.Set();
         }
 
         /// <summary>
@@ -139,8 +141,6 @@ namespace QuantConnect.Wolverine.Fix
         public void OnLogon(SessionID sessionID)
         {
             _protocolDirector.OnLogon(sessionID);
-            _successLoginEvent.Set();
-            _successLoginEvent.Reset();
         }
 
         /// <summary>
@@ -212,6 +212,7 @@ namespace QuantConnect.Wolverine.Fix
                     {
                         Logging.Log.Error("Timeout initializing FIX sessions.");
                     }
+                    _successLoginEvent.Reset();
 
                     if(_cancellationTokenSource.IsCancellationRequested)
                     {

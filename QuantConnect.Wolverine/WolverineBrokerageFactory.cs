@@ -58,7 +58,7 @@ namespace QuantConnect.Wolverine
         /// Gets a new instance of the <see cref="DefaultBrokerageModel"/>
         /// </summary>
         /// <param name="orderProvider">The order provider</param>
-        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new DefaultBrokerageModel();
+        public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider) => new WolverineBrokerageModel();
 
         /// <summary>
         /// Creates a new IBrokerage instance
