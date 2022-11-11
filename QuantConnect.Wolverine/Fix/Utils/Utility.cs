@@ -75,6 +75,9 @@ namespace QuantConnect.Wolverine.Fix.Utils
                 case QF.ExecType.NEW:
                     return OrderStatus.Submitted;
 
+                case QF.ExecType.PENDING_CANCEL:
+                    return OrderStatus.CancelPending;
+
                 case QF.ExecType.CANCELLED:
                     return OrderStatus.Canceled;
 

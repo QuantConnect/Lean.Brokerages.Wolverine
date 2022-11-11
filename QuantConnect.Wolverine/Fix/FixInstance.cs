@@ -209,7 +209,7 @@ namespace QuantConnect.Wolverine.Fix
 
                     if (!_successLoginEvent.WaitOne(TimeSpan.FromSeconds(30), _cancellationTokenSource.Token))
                     {
-                        Logging.Log.Error("Timeout initializing FIX sessions.");
+                        Logging.Log.Error("FixInstance.TryConnect(): Timeout initializing FIX sessions.");
                     }
                     _successLoginEvent.Reset();
 

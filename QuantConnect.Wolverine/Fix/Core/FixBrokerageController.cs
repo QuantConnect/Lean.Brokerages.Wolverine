@@ -33,6 +33,10 @@ namespace QuantConnect.Wolverine.Fix.Core
 
         public bool CancelOrder(Order order)
         {
+            if (_handler == null)
+            {
+                return false;
+            }
             return _handler.CancelOrder(order);
         }
 
@@ -48,6 +52,10 @@ namespace QuantConnect.Wolverine.Fix.Core
 
         public bool PlaceOrder(Order order)
         {
+            if(_handler == null)
+            {
+                return false;
+            }
             return _handler.PlaceOrder(order);
         }
 

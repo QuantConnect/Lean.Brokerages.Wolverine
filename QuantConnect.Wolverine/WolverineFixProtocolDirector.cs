@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Securities;
 using QuantConnect.Wolverine.Fix;
 using QuantConnect.Wolverine.Fix.Core;
 using QuantConnect.Wolverine.Fix.Protocol;
@@ -26,6 +27,7 @@ namespace QuantConnect.Wolverine
 {
     public class WolverineFixProtocolDirector : IFixProtocolDirector
     {
+        private readonly ISecurityProvider _securityProvider;
         private readonly WolverineSymbolMapper _symbolMapper;
         private readonly FixConfiguration _fixConfiguration;
         private readonly IFixBrokerageController _fixBrokerageController;
@@ -37,9 +39,11 @@ namespace QuantConnect.Wolverine
         public WolverineFixProtocolDirector(
             WolverineSymbolMapper symbolMapper,
             FixConfiguration fixConfiguration,
-            IFixBrokerageController fixBrokerageController)
+            IFixBrokerageController fixBrokerageController,
+            ISecurityProvider securityProvider)
         {
             _symbolMapper = symbolMapper;
+            _securityProvider = securityProvider;
             _fixConfiguration = fixConfiguration;
             _fixBrokerageController = fixBrokerageController;
         }
@@ -56,7 +60,7 @@ namespace QuantConnect.Wolverine
             switch (msg)
             {
                 case Logon logon:
-                    //logon.SetField(new ResetSeqNumFlag(ResetSeqNumFlag.YES));
+                    logon.SetField(new ResetSeqNumFlag(ResetSeqNumFlag.YES));
                     logon.SetField(new EncryptMethod(EncryptMethod.NONE));
                     logon.SetField(new OnBehalfOfCompID(_fixConfiguration.OnBehalfOfCompID));
                     break;
@@ -67,7 +71,7 @@ namespace QuantConnect.Wolverine
         {
             if (!_sessionHandlers.TryGetValue(sessionId, out var handler))
             {
-                Logging.Log.Error("Unknown session: " + sessionId);
+                Logging.Log.Error("WolverineFixProtocolDirector.Handle(): Unknown session: " + sessionId);
                 return;
             }
 
@@ -77,7 +81,7 @@ namespace QuantConnect.Wolverine
             }
             catch (Exception e)
             {
-                Logging.Log.Error(e, $"[{sessionId}] Unable to process message {msg.GetType().Name}: {msg}");
+                Logging.Log.Error(e, $"WolverineFixProtocolDirector.Handle(): [{sessionId}] Unable to process message {msg.GetType().Name}: {msg}");
             }
         }
 
@@ -96,11 +100,7 @@ namespace QuantConnect.Wolverine
 
         public void OnLogout(SessionID sessionId)
         {
-            Logging.Log.Trace($"OnLogout(): Removing handler for SessionId: {sessionId}");
-
-            // TODO: ideally we could send the reset request on login
-            //Session.LookupSession(sessionId).NextTargetMsgSeqNum = _expectedMsgSeqNumLogOn;
-            Session.LookupSession(sessionId).NextSenderMsgSeqNum = _expectedMsgSeqNumLogOn;
+            Logging.Log.Trace($"WolverineFixProtocolDirector.OnLogout(): Removing handler for SessionId: {sessionId}");
 
             if (_sessionHandlers.TryRemove(sessionId, out var handler))
             {
@@ -128,7 +128,7 @@ namespace QuantConnect.Wolverine
         {
             if (senderCompId == _fixConfiguration.SenderCompId && targetCompId == _fixConfiguration.TargetCompId)
             {
-                return new WolverineOrderRoutingSessionHandler(_symbolMapper, session, _fixBrokerageController, _fixConfiguration);
+                return new WolverineOrderRoutingSessionHandler(_symbolMapper, session, _fixBrokerageController, _fixConfiguration, _securityProvider);
             }
 
             throw new Exception($"Unknown session senderCompId: '{senderCompId}'");
@@ -140,7 +140,7 @@ namespace QuantConnect.Wolverine
                 return 0;
 
             var textMsg = msg.GetString(Text.TAG);
-            Logging.Log.Trace($"WEX:logout: TAG<58>,text msg: {textMsg}");
+            Logging.Log.Trace($"WolverineFixProtocolDirector.GetExpectedMsgSeqNum(): TAG<58>,text msg: {textMsg}");
             return textMsg.Contains("expected") ? int.Parse(System.Text.RegularExpressions.Regex.Match(textMsg, @"(?<=expected\s)[0-9]+").Value) : 0;
         }
     }

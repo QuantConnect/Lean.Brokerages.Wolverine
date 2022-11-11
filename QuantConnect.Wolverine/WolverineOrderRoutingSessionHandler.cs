@@ -14,6 +14,8 @@
 */
 
 using QuantConnect.Orders;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
 using QuantConnect.Wolverine.Fix;
 using QuantConnect.Wolverine.Fix.Core;
@@ -22,21 +24,24 @@ using QuantConnect.Wolverine.Fix.Utils;
 using QuickFix;
 using QuickFix.Fields;
 using QuickFix.FIX42;
+using System;
 
 namespace QuantConnect.Wolverine
 {
     public class WolverineOrderRoutingSessionHandler : MessageCracker, IWolverineFixSessionHandler, IFixOutboundBrokerageHandler
     {
         private readonly ISession _session;
+        private readonly ISecurityProvider _securityProvider;
         private readonly WolverineSymbolMapper _symbolMapper;
         private readonly FixConfiguration _fixConfiguration;
         private readonly IFixBrokerageController _fixBrokerageController;
 
         public bool IsReady { get; set; }
 
-        public WolverineOrderRoutingSessionHandler(WolverineSymbolMapper symbolMapper, ISession session, IFixBrokerageController fixBrokerageController, FixConfiguration fixConfiguration)
+        public WolverineOrderRoutingSessionHandler(WolverineSymbolMapper symbolMapper, ISession session, IFixBrokerageController fixBrokerageController, FixConfiguration fixConfiguration, ISecurityProvider securityProvider)
         {
             _symbolMapper = symbolMapper;
+            _securityProvider = securityProvider;
             _fixConfiguration = fixConfiguration;
             _session = session ?? throw new ArgumentNullException(nameof(session));
             _fixBrokerageController = fixBrokerageController ?? throw new ArgumentNullException(nameof(fixBrokerageController));
@@ -76,7 +81,8 @@ namespace QuantConnect.Wolverine
                 OrderQty = new OrderQty(order.AbsoluteQuantity),
                 TimeInForce = Utility.ConvertTimeInForce(order.TimeInForce, order.Type),
                 Rule80A = new Rule80A(Rule80A.AGENCY_SINGLE_ORDER),
-                Account = new Account(_fixConfiguration.Account)
+                Account = new Account(_fixConfiguration.Account),
+                ExDestination = new ExDestination(GetOrderExchange(order))
             };
 
             if (order.Symbol.SecurityType == SecurityType.Option)
@@ -107,8 +113,8 @@ namespace QuantConnect.Wolverine
                     wexOrder.OrdType = new OrdType(OrdType.MARKET_ON_CLOSE);
                     break;
                 default:
-                    Logging.Log.Error($"WEX doesn't support current orderType: {nameof(order.Type)}");
-                    break;
+                    Logging.Log.Error($"WolverineOrderRoutingSessionHandler.PlaceOrder(): doesn't support current orderType: {nameof(order.Type)}");
+                    return false;
             }
 
             order.BrokerId.Add(wexOrder.ClOrdID.getValue());
@@ -136,7 +142,7 @@ namespace QuantConnect.Wolverine
             var reason = rejection.CxlRejReason.DescribeInt(rejection.IsSetCxlRejReason());
             var responseTo = rejection.CxlRejResponseTo.DescribeChar(rejection.IsSetCxlRejResponseTo());
             var text = rejection.IsSetText() ? rejection.Text.getValue() : "<no-text>";
-            Logging.Log.Error($"Order cancellation failed: {reason}: {text} (response to:{responseTo})");
+            Logging.Log.Error($"WolverineOrderRoutingSessionHandler.OnMessage(): Order cancellation failed: {reason}: {text} (response to:{responseTo})");
         }
 
         /// <summary>
@@ -156,11 +162,11 @@ namespace QuantConnect.Wolverine
             {
                 if (orderStatus != OrderStatus.Invalid)
                 {
-                    Logging.Log.Trace($"ExecutionReport: Id: {orderId}, ClOrdId: {clOrdId}, ExecType: {execType}, OrderStatus: {orderStatus}");
+                    Logging.Log.Trace($"WolverineOrderRoutingSessionHandler.OnMessage(): ExecutionReport: Id: {orderId}, ClOrdId: {clOrdId}, ExecType: {execType}, OrderStatus: {orderStatus}");
                 }
                 else
                 {
-                    Logging.Log.Error($"ExecutionReport: Id: {orderId}, ClOrdId: {clOrdId}, ExecType: {execType}, OrderStatus: {orderStatus}");
+                    Logging.Log.Error($"WolverineOrderRoutingSessionHandler.OnMessage(): ExecutionReport: Id: {orderId}, ClOrdId: {clOrdId}, ExecType: {execType}, OrderStatus: {orderStatus}");
                 }
             }
 
@@ -175,6 +181,22 @@ namespace QuantConnect.Wolverine
             {
                 _fixBrokerageController.OnOpenOrdersReceived();
             }
+        }
+        private string GetOrderExchange(Order order)
+        {
+            var exchangeDestination = string.Empty;
+            var orderProperties = order.Properties as OrderProperties;
+            if (orderProperties != null && orderProperties.Exchange != null)
+            {
+                exchangeDestination = orderProperties.Exchange.ToString();
+            }
+            if (string.IsNullOrEmpty(exchangeDestination) && order.Symbol.SecurityType == SecurityType.Equity)
+            {
+                var equity = _securityProvider.GetSecurity(order.Symbol) as Equity;
+                // potentially need to map this into Atreyu expected destination exchange name
+                exchangeDestination = equity?.PrimaryExchange.ToString();
+            }
+            return exchangeDestination;
         }
     }
 }
