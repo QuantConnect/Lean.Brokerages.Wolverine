@@ -44,6 +44,7 @@ namespace QuantConnect.Wolverine
         private readonly LiveNodePacket _job;
         private readonly IOrderProvider _orderProvider;
 
+        private readonly ISecurityProvider _securityProvider;
         private readonly IFixBrokerageController _fixBrokerageController;
         private readonly FixInstance _fixInstance;
         private readonly WolverineSymbolMapper _symbolMapper;
@@ -62,10 +63,12 @@ namespace QuantConnect.Wolverine
             LiveNodePacket job, 
             IOrderProvider orderProvider, 
             FixConfiguration fixConfiguration,
+            ISecurityProvider securityProvider,
             bool logFixMessages) : base("Wolverine")
         {
             _job = job;
             _algorithm = algorithm;
+            _securityProvider = securityProvider;
             _orderProvider = orderProvider;
 
             _symbolMapper = new WolverineSymbolMapper();
@@ -73,7 +76,7 @@ namespace QuantConnect.Wolverine
             _fixBrokerageController = new FixBrokerageController();
             _fixBrokerageController.ExecutionReport += OnExecutionReport;
 
-            var fixProtocolDirector = new WolverineFixProtocolDirector(_symbolMapper, fixConfiguration, _fixBrokerageController);
+            var fixProtocolDirector = new WolverineFixProtocolDirector(_symbolMapper, fixConfiguration, _fixBrokerageController, _securityProvider);
 
             _fixInstance = new FixInstance(fixProtocolDirector, fixConfiguration, logFixMessages);
             _fixInstance.Error += (object? sender, FixError e) =>
@@ -171,21 +174,30 @@ namespace QuantConnect.Wolverine
         {
             OrderStatus orderStatus = Utility.ConvertOrderStatus(e);
 
-            var orderId = orderStatus == OrderStatus.Canceled || orderStatus == OrderStatus.UpdateSubmitted
+            var orderId = orderStatus == OrderStatus.Canceled || orderStatus == OrderStatus.CancelPending || orderStatus == OrderStatus.UpdateSubmitted
                 ? e.OrigClOrdID.getValue()
                 : e.ClOrdID.getValue();
 
-            var time = e.TransactTime.getValue();
+            DateTime time;
+            try
+            {
+                time = e.TransactTime.getValue();
+            }
+            catch
+            {
+                // not there, happens on rejection
+                time = DateTime.UtcNow;
+            }
 
             var order = _orderProvider.GetOrderByBrokerageId(orderId);
 
             if (order == null)
             {
-                Log.Error($"WEX.OnExecutionReport(): Unable to locate order with BrokerageId: {orderId}");
+                Log.Error($"WolverineBrokerage.OnExecutionReport(): Unable to locate order with BrokerageId: {orderId}");
                 return;
             }
 
-            var message = "WEX Order Event";
+            var message = "Wolverine Order Event";
             if (e.IsSetText())
             {
                 message += $" - {e.Text.getValue()}";
@@ -198,13 +210,11 @@ namespace QuantConnect.Wolverine
 
             if (orderStatus == OrderStatus.Filled || orderStatus == OrderStatus.PartiallyFilled)
             {
-                var displayFactor = 0;
-
                 var filledQuantity = e.LastShares.getValue();
                 var remainingQuantity = order.AbsoluteQuantity - e.CumQty.getValue();
 
                 orderEvent.FillQuantity = filledQuantity * (order.Direction == OrderDirection.Buy ? 1 : -1);
-                orderEvent.FillPrice = e.LastPx.getValue() * displayFactor;
+                orderEvent.FillPrice = e.LastPx.getValue();
 
                 if (remainingQuantity > 0)
                 {

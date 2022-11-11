@@ -97,6 +97,7 @@ namespace QuantConnect.Wolverine
                 job,
                 algorithm.Transactions,                
                 fixConfiguration,
+                algorithm.Portfolio,
                 logFixMessages);
 
             return instance;

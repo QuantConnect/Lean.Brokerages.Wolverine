@@ -191,7 +191,7 @@ namespace QuantConnect.Wolverine.Tests
 
             var brokerageController = new FixBrokerageController();
 
-            var fixProtocolDirector = new WolverineFixProtocolDirector(symbolMapper, _fixConfiguration, brokerageController);
+            var fixProtocolDirector = new WolverineFixProtocolDirector(symbolMapper, _fixConfiguration, brokerageController, new SecurityProvider());
 
             using var fixInstance = new FixInstance(fixProtocolDirector, _fixConfiguration, true);
 
@@ -212,7 +212,7 @@ namespace QuantConnect.Wolverine.Tests
 
         private WolverineBrokerage CreateBrokerage()
         {
-            return new WolverineBrokerage(_algorithm, _job, _orderProvider, _fixConfiguration, true);
+            return new WolverineBrokerage(_algorithm, _job, _orderProvider, _fixConfiguration, new SecurityProvider(), true);
         }
     }
 }
