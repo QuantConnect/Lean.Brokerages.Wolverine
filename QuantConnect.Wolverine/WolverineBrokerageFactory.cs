@@ -84,7 +84,7 @@ namespace QuantConnect.Wolverine
                 OnBehalfOfCompID = Read<string>(job.BrokerageData, "wolverine-on-behalf-of-comp-id", errors)
             };
 
-            var logFixMessages = Read<bool>(job.BrokerageData, "wolverine-log-fix-messages", errors);
+            var logFixMessages = Read<bool>(job.BrokerageData, "wolverine-log-fix-messages", new List<string>());
 
             if (errors.Count != 0)
             {
