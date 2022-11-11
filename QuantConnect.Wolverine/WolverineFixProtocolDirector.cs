@@ -56,7 +56,7 @@ namespace QuantConnect.Wolverine
             switch (msg)
             {
                 case Logon logon:
-                    //logon.SetField(new ResetSeqNumFlag(ResetSeqNumFlag.YES));
+                    logon.SetField(new ResetSeqNumFlag(ResetSeqNumFlag.YES));
                     logon.SetField(new EncryptMethod(EncryptMethod.NONE));
                     logon.SetField(new OnBehalfOfCompID(_fixConfiguration.OnBehalfOfCompID));
                     break;
@@ -100,7 +100,7 @@ namespace QuantConnect.Wolverine
 
             // TODO: ideally we could send the reset request on login
             //Session.LookupSession(sessionId).NextTargetMsgSeqNum = _expectedMsgSeqNumLogOn;
-            Session.LookupSession(sessionId).NextSenderMsgSeqNum = _expectedMsgSeqNumLogOn;
+            //Session.LookupSession(sessionId).NextSenderMsgSeqNum = _expectedMsgSeqNumLogOn;
 
             if (_sessionHandlers.TryRemove(sessionId, out var handler))
             {
