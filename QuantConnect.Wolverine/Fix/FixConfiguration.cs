@@ -53,6 +53,10 @@ namespace QuantConnect.Wolverine.Fix
             defaultDic.SetBool("SendLogoutBeforeDisconnectFromTimeout", false);
             defaultDic.SetString("HeartBtInt", "30");
             defaultDic.SetString("LogonTimeout", "15");
+            if (!string.IsNullOrEmpty(OnBehalfOfCompID))
+            {
+                defaultDic.SetString("OnBehalfOfCompID", OnBehalfOfCompID);
+            }
 
             settings.Set(defaultDic);
 

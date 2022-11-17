@@ -34,8 +34,6 @@ namespace QuantConnect.Wolverine
 
         private readonly ConcurrentDictionary<SessionID, IWolverineFixSessionHandler> _sessionHandlers = new ConcurrentDictionary<SessionID, IWolverineFixSessionHandler>();
 
-        private int _expectedMsgSeqNumLogOn = default;
-
         public WolverineFixProtocolDirector(
             WolverineSymbolMapper symbolMapper,
             FixConfiguration fixConfiguration,
@@ -62,7 +60,9 @@ namespace QuantConnect.Wolverine
                 case Logon logon:
                     logon.SetField(new ResetSeqNumFlag(ResetSeqNumFlag.YES));
                     logon.SetField(new EncryptMethod(EncryptMethod.NONE));
-                    logon.SetField(new OnBehalfOfCompID(_fixConfiguration.OnBehalfOfCompID));
+                    break;
+                default:
+                    msg.Header.SetField(new OnBehalfOfCompID(_fixConfiguration.OnBehalfOfCompID));
                     break;
             }
         }
@@ -92,10 +92,6 @@ namespace QuantConnect.Wolverine
             var handler = CreateSessionHandler(sessionId.SenderCompID, sessionId.TargetCompID, session);
             handler.IsReady = true;
             _sessionHandlers[sessionId] = handler;
-
-            // Crutch: to logOn with correct MsgSeqNum: Reset Value
-            if (_expectedMsgSeqNumLogOn != 0)
-                _expectedMsgSeqNumLogOn = 0;
         }
 
         public void OnLogout(SessionID sessionId)
@@ -115,10 +111,7 @@ namespace QuantConnect.Wolverine
         {
             switch (msg)
             {
-                case Logout logout:
-                    _expectedMsgSeqNumLogOn = GetExpectedMsgSeqNum(msg);
-                    break;
-                case Heartbeat heartbeat:
+                case Heartbeat:
                     Logging.Log.Trace($"{msg.GetType().Name}: {msg}");
                     break;
             }
@@ -132,16 +125,6 @@ namespace QuantConnect.Wolverine
             }
 
             throw new Exception($"Unknown session senderCompId: '{senderCompId}'");
-        }
-
-        private int GetExpectedMsgSeqNum(Message msg)
-        {
-            if (!msg.IsSetField(Text.TAG))
-                return 0;
-
-            var textMsg = msg.GetString(Text.TAG);
-            Logging.Log.Trace($"WolverineFixProtocolDirector.GetExpectedMsgSeqNum(): TAG<58>,text msg: {textMsg}");
-            return textMsg.Contains("expected") ? int.Parse(System.Text.RegularExpressions.Regex.Match(textMsg, @"(?<=expected\s)[0-9]+").Value) : 0;
         }
     }
 }
