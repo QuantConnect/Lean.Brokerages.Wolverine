@@ -5,7 +5,7 @@
     <field name="MsgType" required="Y"/>
     <field name="SenderCompID" required="Y"/>
     <field name="TargetCompID" required="Y"/>
-    <field name="OnBehalfOfCompID" required="N"/>
+    <field name="OnBehalfOfCompID" required="Y"/>
     <field name="DeliverToCompID" required="N"/>
     <field name="MsgSeqNum" required="Y"/>
     <field name="TargetSubID" required="N"/>

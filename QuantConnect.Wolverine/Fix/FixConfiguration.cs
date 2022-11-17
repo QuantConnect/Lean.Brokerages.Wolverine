@@ -61,6 +61,7 @@ namespace QuantConnect.Wolverine.Fix
             orderRoutingDic.SetString("TargetCompID", TargetCompId);
             orderRoutingDic.SetString("SocketConnectHost", Host);
             orderRoutingDic.SetString("SocketConnectPort", Port);
+            orderRoutingDic.SetString("OnBehalfOfCompID", OnBehalfOfCompID);
 
             var orderRoutingSessionId = new SessionID(FixVersionString, SenderCompId, TargetCompId);
             settings.Set(orderRoutingSessionId, orderRoutingDic);
