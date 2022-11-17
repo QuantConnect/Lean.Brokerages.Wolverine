@@ -62,7 +62,9 @@ namespace QuantConnect.Wolverine
                 case Logon logon:
                     logon.SetField(new ResetSeqNumFlag(ResetSeqNumFlag.YES));
                     logon.SetField(new EncryptMethod(EncryptMethod.NONE));
-                    logon.SetField(new OnBehalfOfCompID(_fixConfiguration.OnBehalfOfCompID));
+                    break;
+                default:
+                    msg.Header.SetField(new OnBehalfOfCompID(_fixConfiguration.OnBehalfOfCompID));
                     break;
             }
         }
