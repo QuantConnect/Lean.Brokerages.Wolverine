@@ -86,6 +86,9 @@ namespace QuantConnect.Wolverine
 
             var logFixMessages = Read<bool>(job.BrokerageData, "wolverine-log-fix-messages", new List<string>());
 
+            Logging.Log.Trace($"WolverineBrokerageFactory.CreateBrokerage(): Host {fixConfiguration.Host} Port {fixConfiguration.Port} Account {fixConfiguration.Account}" +
+                $" SenderCompId {fixConfiguration.SenderCompId} TargetCompId {fixConfiguration.TargetCompId} OnBehalfOfCompID {fixConfiguration.OnBehalfOfCompID}. LogFixMessages {logFixMessages}");
+
             if (errors.Count != 0)
             {
                 // if we had errors then we can't create the instance
