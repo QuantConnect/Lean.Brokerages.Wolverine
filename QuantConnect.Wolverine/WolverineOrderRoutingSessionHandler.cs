@@ -24,12 +24,26 @@ using QuantConnect.Wolverine.Fix.Utils;
 using QuickFix;
 using QuickFix.Fields;
 using QuickFix.FIX42;
-using System;
 
 namespace QuantConnect.Wolverine
 {
     public class WolverineOrderRoutingSessionHandler : MessageCracker, IWolverineFixSessionHandler, IFixOutboundBrokerageHandler
     {
+        private readonly Dictionary<string, string> _exchangeMapping = new() {
+            { Exchange.AMEX.Name, "AMEX-INCA" },
+            { Exchange.ARCA.Name, "ARCA-INCA" },
+            { Exchange.BATS.Name, "BATS-INCA" },
+            { Exchange.BATS_Y.Name, "BATSYX-INCA" },
+            { Exchange.EDGA.Name, "EDGA-INCA" },
+            { Exchange.EDGX.Name, "EDGX-INCA" },
+            { Exchange.NASDAQ.Name, "NASDAQ-INCA" },
+            { Exchange.NASDAQ_BX.Name, "NASDAQBX-INCA" },
+            { Exchange.NYSE.Name, "NYSE-INCA" },
+            { Exchange.NASDAQ_PSX.Name, "PHLX-INCA" },
+            { "SMART", "SMART-INCA" },
+            { "IEX", "IEX-INCA" },
+            { "OTCX", "OTCX-INCA" },
+        };
         private readonly ISession _session;
         private readonly ISecurityProvider _securityProvider;
         private readonly WolverineSymbolMapper _symbolMapper;
@@ -196,7 +210,12 @@ namespace QuantConnect.Wolverine
                 // potentially need to map this into Atreyu expected destination exchange name
                 exchangeDestination = equity?.PrimaryExchange.ToString();
             }
-            return exchangeDestination;
+
+            if (!_exchangeMapping.TryGetValue(exchangeDestination.ToUpper(), out var wolverineExchange))
+            {
+                wolverineExchange = "SMART-INCA";
+            }
+            return wolverineExchange;
         }
     }
 }
