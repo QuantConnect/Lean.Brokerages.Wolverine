@@ -65,11 +65,13 @@ namespace QuantConnect.Wolverine
 
         public bool CancelOrder(Order order)
         {
-            return _session.Send(new OrderCancelRequest
+            var orderToCancel = new OrderCancelRequest
             {
                 ClOrdID = new ClOrdID(WolverineOrderId.GetNext()),
                 OrigClOrdID = new OrigClOrdID(order.BrokerId[0])
-            });
+            };
+            orderToCancel.Header.SetField(new OnBehalfOfCompID(_fixConfiguration.OnBehalfOfCompID));
+            return _session.Send(orderToCancel);
         }
 
         /// <summary>
@@ -133,6 +135,7 @@ namespace QuantConnect.Wolverine
 
             order.BrokerId.Add(wexOrder.ClOrdID.getValue());
 
+            wexOrder.Header.SetField(new OnBehalfOfCompID(_fixConfiguration.OnBehalfOfCompID));
             return _session.Send(wexOrder);
         }
 
