@@ -14,11 +14,15 @@
 */
 
 using QuantConnect.Brokerages;
+using QuantConnect.Interfaces;
+using QuantConnect.Data.Auxiliary;
 
 namespace QuantConnect.Wolverine
 {
     public class WolverineSymbolMapper : ISymbolMapper
     {
+        private readonly IMapFileProvider _mapFileProvider;
+
         // WEX SecurityType -> LEAN security type
         private readonly Dictionary<string, SecurityType> _mapSecurityTypeToLeanSecurityType = new Dictionary<string, SecurityType>
         {
@@ -30,15 +34,20 @@ namespace QuantConnect.Wolverine
         // LEAN security type -> WEX Security TYpe
         private readonly Dictionary<SecurityType, string> _mapLeanSecurityTypeToSecurityType;
 
-        public WolverineSymbolMapper()
+        public WolverineSymbolMapper(IMapFileProvider mapFileProvider)
         {
+            _mapFileProvider = mapFileProvider;
             _mapLeanSecurityTypeToSecurityType = _mapSecurityTypeToLeanSecurityType
                 .ToDictionary(x => x.Value, x => x.Key);
         }
 
         public string GetBrokerageSymbol(Symbol symbol)
         {
-            return symbol.ID.Symbol;
+            if (symbol.ID.SecurityType != SecurityType.Equity)
+            {
+                throw new ArgumentException("Invalid security type: " + symbol.ID.SecurityType);
+            }
+            return GetMappedTicker(symbol);
         }
 
         public Symbol GetLeanSymbol(string brokerageSymbol, SecurityType securityType, string market, DateTime expirationDate = default, decimal strike = 0, OptionRight optionRight = OptionRight.Call)
@@ -54,6 +63,18 @@ namespace QuantConnect.Wolverine
             }
 
             return securityTypeBrokerage;
+        }
+
+        private string GetMappedTicker(Symbol symbol)
+        {
+            var ticker = symbol.ID.Symbol;
+            if (symbol.ID.SecurityType == SecurityType.Equity)
+            {
+                var mapFile = _mapFileProvider.Get(AuxiliaryDataKey.Create(symbol)).ResolveMapFile(symbol);
+                ticker = mapFile.GetMappedSymbol(DateTime.UtcNow, symbol.Value);
+            }
+
+            return ticker;
         }
     }
 }

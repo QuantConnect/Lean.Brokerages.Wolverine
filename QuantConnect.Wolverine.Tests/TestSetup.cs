@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using QuantConnect.Tests;
+
 namespace QuantConnect.Wolverine.Tests
 {
     [TestFixture]
@@ -56,6 +58,8 @@ namespace QuantConnect.Wolverine.Tests
             Log.LogHandler = new CompositeLogHandler();
             Log.Trace("TestSetup(): starting...");
             ReloadConfiguration();
+
+            TestGlobals.Initialize();
         }
 
         private static TestCaseData[] TestParameters
