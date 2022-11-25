@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using QuantConnect.Tests;
+
 namespace QuantConnect.Wolverine.Tests
 {
     [TestFixture]
@@ -187,7 +189,7 @@ namespace QuantConnect.Wolverine.Tests
         [Test]
         public void CanLogonAfterLogout()
         {
-            var symbolMapper = new WolverineSymbolMapper();
+            var symbolMapper = new WolverineSymbolMapper(TestGlobals.MapFileProvider);
 
             var brokerageController = new FixBrokerageController();
 
@@ -212,7 +214,7 @@ namespace QuantConnect.Wolverine.Tests
 
         private WolverineBrokerage CreateBrokerage()
         {
-            return new WolverineBrokerage(_algorithm, _job, _orderProvider, _fixConfiguration, new SecurityProvider(), true);
+            return new WolverineBrokerage(_algorithm, _job, _orderProvider, _fixConfiguration, new SecurityProvider(), TestGlobals.MapFileProvider, true);
         }
     }
 }

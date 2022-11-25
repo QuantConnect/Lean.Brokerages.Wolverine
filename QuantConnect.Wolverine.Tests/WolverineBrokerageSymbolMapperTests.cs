@@ -13,17 +13,31 @@
  * limitations under the License.
 */
 
+using QuantConnect.Tests;
+
 namespace QuantConnect.Wolverine.Tests
 {
     [TestFixture]
     public class WolverineBrokerageSymbolMapperTests
     {
+        [TestCase("AAPL", "AAPL")]
+        [TestCase("VXXB", "VXX")]
+        [TestCase("NB", "BAC")]
+        public void MapCorrectBrokerageSymbol(string ticker, string wexSymbol)
+        {
+            var mapper = new WolverineSymbolMapper(TestGlobals.MapFileProvider);
+
+            var symbol = Symbol.Create(ticker, SecurityType.Equity, Market.USA);
+            var brokerageSymbol = mapper.GetBrokerageSymbol(symbol);
+            Assert.AreEqual(wexSymbol, brokerageSymbol);
+        }
+
         [TestCase("NVAX", SecurityType.Equity, "NVAX")]
         public void ReturnsCorrectBrokerageSymbol(string symbolValue, SecurityType symbolSecurityType, string expectedBrokerageSymbol)
         {
             var leanSymbol = Symbol.Create(symbolValue, symbolSecurityType, Market.USA);
 
-            var symbolMapper = new WolverineSymbolMapper();
+            var symbolMapper = new WolverineSymbolMapper(TestGlobals.MapFileProvider);
 
             var symbolBrokerage = symbolMapper.GetBrokerageSymbol(leanSymbol);
 
@@ -35,7 +49,7 @@ namespace QuantConnect.Wolverine.Tests
         [TestCase(SecurityType.Future, "FUT")]
         public void GetBrokerageSecurityType(SecurityType securityType, string expectedSecurityType)
         {
-            var symbolMapper = new WolverineSymbolMapper();
+            var symbolMapper = new WolverineSymbolMapper(TestGlobals.MapFileProvider);
 
             var securityTypeBrokerage = symbolMapper.GetBrokerageSecurityType(securityType);
 
