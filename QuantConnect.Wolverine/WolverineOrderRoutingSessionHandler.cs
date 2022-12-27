@@ -17,7 +17,6 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
-using QuantConnect.Wolverine.Fix;
 using QuantConnect.Wolverine.Fix.Core;
 using QuantConnect.Wolverine.Fix.Protocol;
 using QuantConnect.Wolverine.Fix.Utils;
@@ -44,19 +43,20 @@ namespace QuantConnect.Wolverine
             { "IEX", "IEX-INCA" },
             { "OTCX", "OTCX-INCA" },
         };
+
+        private readonly Account _account;
         private readonly ISession _session;
         private readonly ISecurityProvider _securityProvider;
         private readonly WolverineSymbolMapper _symbolMapper;
-        private readonly FixConfiguration _fixConfiguration;
         private readonly IFixBrokerageController _fixBrokerageController;
 
         public bool IsReady { get; set; }
 
-        public WolverineOrderRoutingSessionHandler(WolverineSymbolMapper symbolMapper, ISession session, IFixBrokerageController fixBrokerageController, FixConfiguration fixConfiguration, ISecurityProvider securityProvider)
+        public WolverineOrderRoutingSessionHandler(WolverineSymbolMapper symbolMapper, ISession session, IFixBrokerageController fixBrokerageController, string account, ISecurityProvider securityProvider)
         {
             _symbolMapper = symbolMapper;
+            _account = new Account(account);
             _securityProvider = securityProvider;
-            _fixConfiguration = fixConfiguration;
             _session = session ?? throw new ArgumentNullException(nameof(session));
             _fixBrokerageController = fixBrokerageController ?? throw new ArgumentNullException(nameof(fixBrokerageController));
 
@@ -70,7 +70,6 @@ namespace QuantConnect.Wolverine
                 ClOrdID = new ClOrdID(WolverineOrderId.GetNext()),
                 OrigClOrdID = new OrigClOrdID(order.BrokerId[0])
             };
-            orderToCancel.Header.SetField(new OnBehalfOfCompID(_fixConfiguration.OnBehalfOfCompID));
             return _session.Send(orderToCancel);
         }
 
@@ -97,7 +96,7 @@ namespace QuantConnect.Wolverine
                 OrderQty = new OrderQty(order.AbsoluteQuantity),
                 TimeInForce = Utility.ConvertTimeInForce(order.TimeInForce, order.Type),
                 Rule80A = new Rule80A(Rule80A.AGENCY_SINGLE_ORDER),
-                Account = new Account(_fixConfiguration.Account),
+                Account = _account,
                 ExDestination = new ExDestination(GetOrderExchange(order))
             };
 
@@ -135,7 +134,6 @@ namespace QuantConnect.Wolverine
 
             order.BrokerId.Add(wexOrder.ClOrdID.getValue());
 
-            wexOrder.Header.SetField(new OnBehalfOfCompID(_fixConfiguration.OnBehalfOfCompID));
             return _session.Send(wexOrder);
         }
 

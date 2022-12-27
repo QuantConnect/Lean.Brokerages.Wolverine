@@ -77,7 +77,7 @@ namespace QuantConnect.Wolverine
             _fixBrokerageController = new FixBrokerageController();
             _fixBrokerageController.ExecutionReport += OnExecutionReport;
 
-            var fixProtocolDirector = new WolverineFixProtocolDirector(_symbolMapper, fixConfiguration, _fixBrokerageController, _securityProvider);
+            var fixProtocolDirector = new WolverineFixProtocolDirector(_symbolMapper, fixConfiguration.Account, _fixBrokerageController, _securityProvider);
 
             _fixInstance = new FixInstance(fixProtocolDirector, fixConfiguration, logFixMessages);
             _fixInstance.Error += (object? sender, FixError e) =>

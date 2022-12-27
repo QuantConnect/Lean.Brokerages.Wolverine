@@ -14,6 +14,7 @@
 */
 
 using QuickFix;
+using QuickFix.Fields;
 using QuantConnect.Util;
 using QuickFix.Transport;
 using QuantConnect.Securities;
@@ -29,17 +30,20 @@ namespace QuantConnect.Wolverine.Fix
     public class FixInstance : IApplication, IDisposable
     {
         private readonly IFixProtocolDirector _protocolDirector;
-        private readonly SocketInitiator _initiator;
-        private SecurityExchangeHours _securityExchangeHours;
+        private SocketInitiator _initiator;
+        private readonly SecurityExchangeHours _securityExchangeHours;
 
         private bool _disposed;
         private volatile bool _connected;
+        private readonly QuickFixLogFactory _logFactory;
+        private readonly FixConfiguration _fixConfiguration;
+        private readonly OnBehalfOfCompID _onBehalfOfCompID;
         private CancellationTokenSource _cancellationTokenSource;
 
         /// <summary>
-        /// Thread synchronization event, for successful LogOn
+        /// Thread synchronization event, for LogOn events
         /// </summary>
-        private ManualResetEvent _successLoginEvent = new ManualResetEvent(false);
+        private ManualResetEvent _loginEvent = new (false);
 
         /// <summary>
         /// Event invoke to show problem with FIX protocol
@@ -50,11 +54,11 @@ namespace QuantConnect.Wolverine.Fix
         {
             _protocolDirector = protocolDirector ?? throw new ArgumentNullException(nameof(protocolDirector));
 
-            var settings = fixConfiguration.GetDefaultSessionSettings();
+            _fixConfiguration = fixConfiguration;
 
-            var storeFactory = new FileStoreFactory(settings);
-            var logFactory = new QuickFixLogFactory(logFixMessages);
-            _initiator = new SocketInitiator(this, storeFactory, settings, logFactory, protocolDirector.MessageFactory);
+            _onBehalfOfCompID = new OnBehalfOfCompID(fixConfiguration.OnBehalfOfCompID);
+
+            _logFactory = new QuickFixLogFactory(logFixMessages);
 
             _securityExchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.USA, null, SecurityType.Equity);
         }
@@ -139,7 +143,7 @@ namespace QuantConnect.Wolverine.Fix
         public void OnLogon(SessionID sessionID)
         {
             _protocolDirector.OnLogon(sessionID);
-            _successLoginEvent.Set();
+            _loginEvent.Set();
         }
 
         /// <summary>
@@ -149,6 +153,7 @@ namespace QuantConnect.Wolverine.Fix
         public void OnLogout(SessionID sessionID)
         {
             _protocolDirector.OnLogout(sessionID);
+            _loginEvent.Set();
         }
 
         /// <summary>
@@ -158,6 +163,7 @@ namespace QuantConnect.Wolverine.Fix
         /// <param name="sessionID"></param>
         public void ToAdmin(Message message, SessionID sessionID)
         {
+            message.Header.SetField(_onBehalfOfCompID);
             _protocolDirector.EnrichOutbound(message);
         }
 
@@ -167,7 +173,10 @@ namespace QuantConnect.Wolverine.Fix
         /// </summary>
         /// <param name="message"></param>
         /// <param name="sessionID"></param>
-        public void ToApp(Message message, SessionID sessionID) { }
+        public void ToApp(Message message, SessionID sessionID)
+        {
+            message.Header.SetField(_onBehalfOfCompID);
+        }
 
         private bool IsExchangeOpen(bool extendedMarketHours)
         {
@@ -180,7 +189,7 @@ namespace QuantConnect.Wolverine.Fix
             _connected = false;
             // stop fix connection monitor
             _cancellationTokenSource.Cancel();
-            if (!_initiator.IsStopped)
+            if (_initiator != null && !_initiator.IsStopped)
             {
                 _initiator.Stop();
             }
@@ -202,25 +211,39 @@ namespace QuantConnect.Wolverine.Fix
         {
             try
             {
-                if (_initiator.IsStopped && IsExchangeOpen(extendedMarketHours: true))
+                _fixConfiguration.Reset();
+
+                // while the exchange is open and we are not connected, let's try to connect
+                if (!_protocolDirector.AreSessionsReady() && IsExchangeOpen(extendedMarketHours: true))
                 {
-                    // while the exchange is open and we are not connected, let's try to connect
-                    _initiator.Start();
-
-                    if (!_successLoginEvent.WaitOne(TimeSpan.FromSeconds(30), _cancellationTokenSource.Token))
+                    var count = 0;
+                    do
                     {
-                        Logging.Log.Error("FixInstance.TryConnect(): Timeout initializing FIX sessions.");
-                    }
-                    _successLoginEvent.Reset();
+                        // start fresh each loop
+                        _initiator.DisposeSafely();
+                        _loginEvent.Reset();
 
-                    if(_cancellationTokenSource.IsCancellationRequested)
-                    {
-                        return false;
-                    }
+                        var settings = _fixConfiguration.GetDefaultSessionSettings();
+                        var sessionId = settings.GetSessions().Single();
+                        Logging.Log.Trace($"FixInstance.TryConnect({sessionId}): start...");
 
-                    return !_initiator.IsStopped 
-                        && _initiator.GetSessionIDs().Select(Session.LookupSession).All(session => session != null && session.IsLoggedOn) 
-                        && _protocolDirector.AreSessionsReady();
+                        var storeFactory = new FileStoreFactory(settings);
+                        _initiator = new SocketInitiator(this, storeFactory, settings, _logFactory, _protocolDirector.MessageFactory);
+                        _initiator.Start();
+
+                        if (!_loginEvent.WaitOne(TimeSpan.FromSeconds(10), _cancellationTokenSource.Token))
+                        {
+                            Logging.Log.Error($"FixInstance.TryConnect({sessionId}): Timeout initializing FIX session.");
+                        }
+                        else if (_protocolDirector.AreSessionsReady())
+                        {
+                            Logging.Log.Trace($"FixInstance.TryConnect({sessionId}): Connected FIX session.");
+                            return true;
+                        }
+
+                    } while (!_cancellationTokenSource.IsCancellationRequested && ++count <= 15);
+
+                    return false;
                 }
 
                 // we are already connected or exchange is closed
