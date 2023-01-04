@@ -193,7 +193,7 @@ namespace QuantConnect.Wolverine.Tests
 
             var brokerageController = new FixBrokerageController();
 
-            var fixProtocolDirector = new WolverineFixProtocolDirector(symbolMapper, _fixConfiguration, brokerageController, new SecurityProvider());
+            var fixProtocolDirector = new WolverineFixProtocolDirector(symbolMapper, _fixConfiguration.Account, brokerageController, new SecurityProvider());
 
             using var fixInstance = new FixInstance(fixProtocolDirector, _fixConfiguration, true);
 

@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Securities;
-using QuantConnect.Wolverine.Fix;
 using QuantConnect.Wolverine.Fix.Core;
 using QuantConnect.Wolverine.Fix.Protocol;
 using QuickFix;
@@ -29,20 +28,20 @@ namespace QuantConnect.Wolverine
     {
         private readonly ISecurityProvider _securityProvider;
         private readonly WolverineSymbolMapper _symbolMapper;
-        private readonly FixConfiguration _fixConfiguration;
+        private readonly string _account;
         private readonly IFixBrokerageController _fixBrokerageController;
 
         private readonly ConcurrentDictionary<SessionID, IWolverineFixSessionHandler> _sessionHandlers = new ConcurrentDictionary<SessionID, IWolverineFixSessionHandler>();
 
         public WolverineFixProtocolDirector(
             WolverineSymbolMapper symbolMapper,
-            FixConfiguration fixConfiguration,
+            string account,
             IFixBrokerageController fixBrokerageController,
             ISecurityProvider securityProvider)
         {
+            _account = account;
             _symbolMapper = symbolMapper;
             _securityProvider = securityProvider;
-            _fixConfiguration = fixConfiguration;
             _fixBrokerageController = fixBrokerageController;
         }
 
@@ -50,7 +49,7 @@ namespace QuantConnect.Wolverine
 
         public bool AreSessionsReady()
         {
-            return _sessionHandlers.IsEmpty ? false : _sessionHandlers.Values.All(handler => handler.IsReady);
+            return _sessionHandlers.IsEmpty ? false : _sessionHandlers.All(kvp => kvp.Value.IsReady && Session.LookupSession(kvp.Key).IsLoggedOn);
         }
 
         public void EnrichOutbound(Message msg)
@@ -84,11 +83,14 @@ namespace QuantConnect.Wolverine
 
         public void OnLogon(SessionID sessionId)
         {
+            Logging.Log.Trace($"WolverineFixProtocolDirector.OnLogon(): Adding handler for SessionId: {sessionId}");
+
             var session = new QuickFixSession(sessionId);
 
-            var handler = CreateSessionHandler(sessionId.SenderCompID, sessionId.TargetCompID, session);
-            handler.IsReady = true;
-            _sessionHandlers[sessionId] = handler;
+            _sessionHandlers[sessionId] = new WolverineOrderRoutingSessionHandler(_symbolMapper, session, _fixBrokerageController, _account, _securityProvider)
+            {
+                IsReady = true
+            };
         }
 
         public void OnLogout(SessionID sessionId)
@@ -97,10 +99,7 @@ namespace QuantConnect.Wolverine
 
             if (_sessionHandlers.TryRemove(sessionId, out var handler))
             {
-                if (sessionId.SenderCompID == _fixConfiguration.SenderCompId && sessionId.TargetCompID == _fixConfiguration.TargetCompId)
-                {
-                    _fixBrokerageController.Unregister((IFixOutboundBrokerageHandler)handler);
-                }
+                _fixBrokerageController.Unregister((IFixOutboundBrokerageHandler)handler);
             }
         }
 
@@ -112,16 +111,6 @@ namespace QuantConnect.Wolverine
                     Logging.Log.Trace($"{msg.GetType().Name}: {msg}");
                     break;
             }
-        }
-
-        private IWolverineFixSessionHandler CreateSessionHandler(string senderCompId, string targetCompId, ISession session)
-        {
-            if (senderCompId == _fixConfiguration.SenderCompId && targetCompId == _fixConfiguration.TargetCompId)
-            {
-                return new WolverineOrderRoutingSessionHandler(_symbolMapper, session, _fixBrokerageController, _fixConfiguration, _securityProvider);
-            }
-
-            throw new Exception($"Unknown session senderCompId: '{senderCompId}'");
         }
     }
 }

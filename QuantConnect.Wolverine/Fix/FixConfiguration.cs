@@ -14,11 +14,16 @@
 */
 
 using QuickFix;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Wolverine.Fix
 {
     public class FixConfiguration
     {
+        private readonly int _maxSenderSessionId = Config.GetInt("max-sender-session-id", 15);
+
+        private int? _senderSessionId = null;
+
         public string FixVersionString { get; set; } = "FIX.4.2";
 
         // market data session
@@ -53,19 +58,47 @@ namespace QuantConnect.Wolverine.Fix
             defaultDic.SetBool("SendLogoutBeforeDisconnectFromTimeout", false);
             defaultDic.SetString("HeartBtInt", "30");
             defaultDic.SetString("LogonTimeout", "15");
+            defaultDic.SetString("SocketConnectHost", Host);
+            defaultDic.SetString("SocketConnectPort", Port);
 
             settings.Set(defaultDic);
 
-            var orderRoutingDic = new Dictionary();
-            orderRoutingDic.SetString("SenderCompID", SenderCompId);
-            orderRoutingDic.SetString("TargetCompID", TargetCompId);
-            orderRoutingDic.SetString("SocketConnectHost", Host);
-            orderRoutingDic.SetString("SocketConnectPort", Port);
-
-            var orderRoutingSessionId = new SessionID(FixVersionString, SenderCompId, TargetCompId);
-            settings.Set(orderRoutingSessionId, orderRoutingDic);
+            var sessionId = GetNewSessionId();
+            settings.Set(sessionId, new Dictionary());
 
             return settings;
+        }
+
+        /// <summary>
+        /// Will create a new session id
+        /// </summary>
+        /// <remarks>Will increment the sender session Id to find a free connection on the target</remarks>
+        private SessionID GetNewSessionId()
+        {
+            var senderCompId = SenderCompId;
+            if (!_senderSessionId.HasValue)
+            {
+                // the first time we try we directly use the plain 'SenderCompId'
+                _senderSessionId = 0;
+            }
+            else
+            {
+                // following calls we add an incremental id, we try to find a free connection point
+                senderCompId += $"-{_senderSessionId}";
+                _senderSessionId++;
+                if(_senderSessionId > _maxSenderSessionId)
+                {
+                    Reset();
+                }
+            }
+
+            return new SessionID(FixVersionString, senderCompId, TargetCompId);
+        }
+
+        public void Reset()
+        {
+            // start again the next time
+            _senderSessionId = null;
         }
     }
 }
