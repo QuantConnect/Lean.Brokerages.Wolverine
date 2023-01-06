@@ -94,13 +94,13 @@ namespace QuantConnect.Wolverine.Tests
                 var submittedEvent = new ManualResetEvent(false);
                 var filledEvent = new ManualResetEvent(false);
 
-                brokerage.OrderStatusChanged += (s, e) =>
+                brokerage.OrdersStatusChanged += (s, e) =>
                 {
-                    if (e.Status == OrderStatus.Submitted)
+                    if (e.Single().Status == OrderStatus.Submitted)
                     {
                         submittedEvent.Set();
                     }
-                    else if (e.Status == OrderStatus.Filled)
+                    else if (e.Single().Status == OrderStatus.Filled)
                     {
                         filledEvent.Set();
                     }
@@ -131,12 +131,12 @@ namespace QuantConnect.Wolverine.Tests
             {
                 var invalidEvent = new ManualResetEvent(false);
 
-                brokerage.OrderStatusChanged += (s, e) =>
+                brokerage.OrdersStatusChanged += (s, e) =>
                 {
-                    if (e.Status == OrderStatus.Invalid)
+                    if (e.Single().Status == OrderStatus.Invalid)
                     {
-                        Assert.That(e.Message.EndsWith($"Invalid account {_fixConfiguration.Account}") ||
-                                    e.Message.EndsWith("Trading Technologies Order Event"));
+                        Assert.That(e.Single().Message.EndsWith($"Invalid account {_fixConfiguration.Account}") ||
+                                    e.Single().Message.EndsWith("Trading Technologies Order Event"));
 
                         invalidEvent.Set();
                     }
@@ -164,11 +164,11 @@ namespace QuantConnect.Wolverine.Tests
             {
                 var invalidEvent = new ManualResetEvent(false);
 
-                brokerage.OrderStatusChanged += (s, e) =>
+                brokerage.OrdersStatusChanged += (s, e) =>
                 {
-                    if (e.Status == OrderStatus.Invalid)
+                    if (e.Single().Status == OrderStatus.Invalid)
                     {
-                        Assert.That(e.Message.Contains("Lookup by name failed") || e.Message.Contains("No instrument found"));
+                        Assert.That(e.Single().Message.Contains("Lookup by name failed") || e.Single().Message.Contains("No instrument found"));
 
                         invalidEvent.Set();
                     }
