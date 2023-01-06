@@ -190,7 +190,7 @@ namespace QuantConnect.Wolverine
                 time = DateTime.UtcNow;
             }
 
-            var order = _orderProvider.GetOrdersByBrokerageId(orderId).SingleOrDefault();
+            var order = _orderProvider.GetOrdersByBrokerageId(orderId)?.SingleOrDefault();
 
             if (order == null)
             {
