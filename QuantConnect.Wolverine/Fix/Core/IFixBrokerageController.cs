@@ -25,6 +25,7 @@ namespace QuantConnect.Wolverine.Fix.Core
     public interface IFixBrokerageController
     {
         event EventHandler<ExecutionReport> ExecutionReport;
+        event EventHandler<OrderCancelReject> CancelReject;
 
         /// <summary>
         ///     Registers a brokerage handler to this controller.
@@ -44,6 +45,12 @@ namespace QuantConnect.Wolverine.Fix.Core
         /// <param name="orderEvent">Order event</param>
         // TODO: Decide whether communication from a handler back to the controller should be done via an event.
         void Receive(ExecutionReport orderEvent);
+
+        /// <summary>
+        /// Receive and order cancellation rejection
+        /// </summary>
+        /// <param name="reject">The rejection</param>
+        void Receive(OrderCancelReject reject);
 
         bool RequestOpenOrders();
 
