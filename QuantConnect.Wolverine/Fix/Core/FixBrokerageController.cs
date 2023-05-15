@@ -29,6 +29,8 @@ namespace QuantConnect.Wolverine.Fix.Core
 
         public event EventHandler<ExecutionReport> ExecutionReport;
 
+        public event EventHandler<OrderCancelReject> CancelReject;
+
         public FixBrokerageController() { }
 
         public bool CancelOrder(Order order)
@@ -78,6 +80,11 @@ namespace QuantConnect.Wolverine.Fix.Core
             }
 
             ExecutionReport?.Invoke(this, execution);
+        }
+
+        public void Receive(OrderCancelReject cancelReject)
+        {
+            CancelReject?.Invoke(this, cancelReject);
         }
 
         public void Register(IFixOutboundBrokerageHandler handler)

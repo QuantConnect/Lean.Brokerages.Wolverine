@@ -154,10 +154,7 @@ namespace QuantConnect.Wolverine
         /// <param name="_"></param>
         public void OnMessage(OrderCancelReject rejection, SessionID _)
         {
-            var reason = rejection.CxlRejReason.DescribeInt(rejection.IsSetCxlRejReason());
-            var responseTo = rejection.CxlRejResponseTo.DescribeChar(rejection.IsSetCxlRejResponseTo());
-            var text = rejection.IsSetText() ? rejection.Text.getValue() : "<no-text>";
-            Logging.Log.Error($"WolverineOrderRoutingSessionHandler.OnMessage(): Order cancellation failed: {reason}: {text} (response to:{responseTo})");
+            _fixBrokerageController.Receive(rejection);
         }
 
         /// <summary>
