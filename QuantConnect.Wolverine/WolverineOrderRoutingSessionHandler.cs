@@ -29,19 +29,19 @@ namespace QuantConnect.Wolverine
     public class WolverineOrderRoutingSessionHandler : MessageCracker, IWolverineFixSessionHandler, IFixOutboundBrokerageHandler
     {
         private readonly Dictionary<string, string> _exchangeMapping = new() {
-            { Exchange.AMEX.Name, "AMEX-INCA" },
-            { Exchange.ARCA.Name, "ARCA-INCA" },
-            { Exchange.BATS.Name, "BATS-INCA" },
-            { Exchange.BATS_Y.Name, "BATSYX-INCA" },
-            { Exchange.EDGA.Name, "EDGA-INCA" },
-            { Exchange.EDGX.Name, "EDGX-INCA" },
-            { Exchange.NASDAQ.Name, "NASDAQ-INCA" },
-            { Exchange.NASDAQ_BX.Name, "NASDAQBX-INCA" },
-            { Exchange.NYSE.Name, "NYSE-INCA" },
-            { Exchange.NASDAQ_PSX.Name, "PHLX-INCA" },
-            { "SMART", "SMART-INCA" },
-            { "IEX", "IEX-INCA" },
-            { "OTCX", "OTCX-INCA" },
+            { Exchange.AMEX.Name, "AMEX" },
+            { Exchange.ARCA.Name, "ARCA" },
+            { Exchange.BATS.Name, "BATS" },
+            { Exchange.BATS_Y.Name, "BATSYX" },
+            { Exchange.EDGA.Name, "EDGA" },
+            { Exchange.EDGX.Name, "EDGX" },
+            { Exchange.NASDAQ.Name, "NASDAQ" },
+            { Exchange.NASDAQ_BX.Name, "NASDAQBX" },
+            { Exchange.NYSE.Name, "NYSE" },
+            { Exchange.NASDAQ_PSX.Name, "PHLX" },
+            { Exchange.SMART, "SMART" },
+            { Exchange.IEX, "IEX" },
+            { Exchange.OTCX, "OTCX" }
         };
 
         private readonly Account _account;
@@ -211,9 +211,16 @@ namespace QuantConnect.Wolverine
 
             if (!_exchangeMapping.TryGetValue(exchangeDestination.ToUpper(), out var wolverineExchange))
             {
-                wolverineExchange = "SMART-INCA";
+                wolverineExchange = "SMART";
             }
-            return wolverineExchange;
+
+            var exchangePostFix = string.Empty;
+            var wolverineOrderProperties = order.Properties as WolverineOrderProperties;
+            if (wolverineOrderProperties != null && !string.IsNullOrEmpty(wolverineOrderProperties.ExchangePostFix))
+            {
+                exchangePostFix = wolverineOrderProperties.ExchangePostFix;
+            }
+            return wolverineExchange + exchangePostFix;
         }
     }
 }
