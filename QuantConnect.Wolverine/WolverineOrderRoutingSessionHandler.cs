@@ -214,9 +214,9 @@ namespace QuantConnect.Wolverine
                 wolverineExchange = "SMART";
             }
 
-            var exchangePostFix = "-INCA-TX";
+            var exchangePostFix = string.Empty;
             var wolverineOrderProperties = order.Properties as WolverineOrderProperties;
-            if (wolverineOrderProperties != null && wolverineOrderProperties.ExchangePostFix != null)
+            if (wolverineOrderProperties != null && !string.IsNullOrEmpty(wolverineOrderProperties.ExchangePostFix))
             {
                 exchangePostFix = wolverineOrderProperties.ExchangePostFix;
             }
