@@ -1,0 +1,17 @@
+{
+	"description": "Wolverine Execution Services(WEX) is a low latency, high-quality execution provider integrated with QuantConnect. We have a low-latency FIX connection over a secure tunnel sufficient for prop-desks, professional traders, and quants.",
+	
+	"platforms-features": [
+		{
+			"Platforms": ["Cloud Platform", "Local Platform", "LEAN CLI"],
+			"Download Data": [0,0,0],
+			"Backtesting": [0,0,0],
+			"Optimization": [0,0,0],
+			"Live Trading":	[1,1,1]
+		}
+	],
+	"order-types": [ "Market" ],
+	"assets": [ "Equity" ], 
+	"brokerage-url": "https://www.tradewex.com/Home/Execution",
+	"documentation": "/docs/v2/cloud-platform/live-trading/brokerages/wolverine"
+}
