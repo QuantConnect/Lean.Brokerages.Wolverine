@@ -14,12 +14,12 @@
 */
 
 using QuantConnect.Orders;
-using QuantConnect.Wolverine.Fix.Protocol;
+using QuantConnect.Brokerages.Wolverine.Fix.Protocol;
 using QuickFix.Fields;
 using QuickFix.FIX42;
 using System.Collections.Concurrent;
 
-namespace QuantConnect.Wolverine.Fix.Core
+namespace QuantConnect.Brokerages.Wolverine.Fix.Core
 {
     public class FixBrokerageController : IFixBrokerageController
     {

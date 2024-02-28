@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Wolverine.Tests
+namespace QuantConnect.Brokerages.Wolverine.Tests
 {
     public class WolverineBrokerageFactoryTests
     {

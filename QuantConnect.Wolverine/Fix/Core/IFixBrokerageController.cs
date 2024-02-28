@@ -14,10 +14,10 @@
 */
 
 using QuantConnect.Orders;
-using QuantConnect.Wolverine.Fix.Protocol;
+using QuantConnect.Brokerages.Wolverine.Fix.Protocol;
 using QuickFix.FIX42;
 
-namespace QuantConnect.Wolverine.Fix.Core
+namespace QuantConnect.Brokerages.Wolverine.Fix.Core
 {
     /// <summary>
     ///     Controls brokerage related communication between QC and a FIX protocol implementation.

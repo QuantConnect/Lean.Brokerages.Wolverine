@@ -15,7 +15,7 @@
 
 using QuickFix;
 
-namespace QuantConnect.Wolverine
+namespace QuantConnect.Brokerages.Wolverine
 {
     public interface IWolverineFixSessionHandler
     {

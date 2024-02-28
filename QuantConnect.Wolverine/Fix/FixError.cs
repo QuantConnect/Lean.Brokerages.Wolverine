@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Wolverine.Fix
+namespace QuantConnect.Brokerages.Wolverine.Fix
 {
     /// <summary>
     /// Class is used to return error message from FIX protocol pipeline

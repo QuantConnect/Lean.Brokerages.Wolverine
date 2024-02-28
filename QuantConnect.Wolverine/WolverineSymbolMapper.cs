@@ -13,11 +13,10 @@
  * limitations under the License.
 */
 
-using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 using QuantConnect.Data.Auxiliary;
 
-namespace QuantConnect.Wolverine
+namespace QuantConnect.Brokerages.Wolverine
 {
     public class WolverineSymbolMapper : ISymbolMapper
     {

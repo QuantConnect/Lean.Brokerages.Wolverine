@@ -5,10 +5,10 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<Product>QuantConnect.Wolverine</Product>
-		<AssemblyName>QuantConnect.Wolverine</AssemblyName>
-		<RootNamespace>QuantConnect.Wolverine</RootNamespace>
-		<AssemblyTitle>QuantConnect.Wolverine</AssemblyTitle>
+		<Product>QuantConnect.Brokerages.Wolverine</Product>
+		<AssemblyName>QuantConnect.Brokerages.Wolverine</AssemblyName>
+		<RootNamespace>QuantConnect.Brokerages.Wolverine</RootNamespace>
+		<AssemblyTitle>QuantConnect.Brokerages.Wolverine</AssemblyTitle>
 		<OutputType>Library</OutputType>
 		<OutputPath>bin\$(Configuration)\</OutputPath>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

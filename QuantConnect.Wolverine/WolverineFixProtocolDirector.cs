@@ -14,15 +14,15 @@
 */
 
 using QuantConnect.Securities;
-using QuantConnect.Wolverine.Fix.Core;
-using QuantConnect.Wolverine.Fix.Protocol;
+using QuantConnect.Brokerages.Wolverine.Fix.Core;
+using QuantConnect.Brokerages.Wolverine.Fix.Protocol;
 using QuickFix;
 using QuickFix.Fields;
 using QuickFix.FIX42;
 using System.Collections.Concurrent;
 using Message = QuickFix.Message;
 
-namespace QuantConnect.Wolverine
+namespace QuantConnect.Brokerages.Wolverine
 {
     public class WolverineFixProtocolDirector : IFixProtocolDirector
     {

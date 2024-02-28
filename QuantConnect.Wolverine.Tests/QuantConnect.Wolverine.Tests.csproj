@@ -11,10 +11,10 @@
 		<Copyright>Copyright ©  2021</Copyright>
 		<TestProjectType>UnitTest</TestProjectType>
 		<OutputPath>bin\$(Configuration)\</OutputPath>
-		<Product>QuantConnect.Wolverine.Tests</Product>
-		<AssemblyName>QuantConnect.Wolverine.Tests</AssemblyName>
-		<RootNamespace>QuantConnect.Wolverine.Tests</RootNamespace>
-		<AssemblyTitle>QuantConnect.Wolverine.Tests</AssemblyTitle>
+		<Product>QuantConnect.Brokerages.Wolverine.Tests</Product>
+		<AssemblyName>QuantConnect.Brokerages.Wolverine.Tests</AssemblyName>
+		<RootNamespace>QuantConnect.Brokerages.Wolverine.Tests</RootNamespace>
+		<AssemblyTitle>QuantConnect.Brokerages.Wolverine.Tests</AssemblyTitle>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 	</PropertyGroup>
 

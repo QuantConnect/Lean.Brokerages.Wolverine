@@ -17,14 +17,14 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Util;
-using QuantConnect.Wolverine.Fix.Core;
-using QuantConnect.Wolverine.Fix.Protocol;
-using QuantConnect.Wolverine.Fix.Utils;
+using QuantConnect.Brokerages.Wolverine.Fix.Core;
+using QuantConnect.Brokerages.Wolverine.Fix.Protocol;
+using QuantConnect.Brokerages.Wolverine.Fix.Utils;
 using QuickFix;
 using QuickFix.Fields;
 using QuickFix.FIX42;
 
-namespace QuantConnect.Wolverine
+namespace QuantConnect.Brokerages.Wolverine
 {
     public class WolverineOrderRoutingSessionHandler : MessageCracker, IWolverineFixSessionHandler, IFixOutboundBrokerageHandler
     {

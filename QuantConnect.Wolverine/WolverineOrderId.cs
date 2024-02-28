@@ -15,7 +15,7 @@
 
 using System.Globalization;
 
-namespace QuantConnect.Wolverine
+namespace QuantConnect.Brokerages.Wolverine
 {
     public static class WolverineOrderId
     {

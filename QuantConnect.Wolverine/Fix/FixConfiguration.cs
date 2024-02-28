@@ -16,7 +16,7 @@
 using QuickFix;
 using QuantConnect.Configuration;
 
-namespace QuantConnect.Wolverine.Fix
+namespace QuantConnect.Brokerages.Wolverine.Fix
 {
     public class FixConfiguration
     {
