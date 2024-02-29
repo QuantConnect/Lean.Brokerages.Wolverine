@@ -15,7 +15,7 @@
 
 using QuantConnect.Tests;
 
-namespace QuantConnect.Wolverine.Tests
+namespace QuantConnect.Brokerages.Wolverine.Tests
 {
     [TestFixture]
     [Explicit("These tests require a valid WEX configuration.")]

@@ -15,7 +15,7 @@
 
 using QuickFix;
 
-namespace QuantConnect.Wolverine.Fix.LogFactory
+namespace QuantConnect.Brokerages.Wolverine.Fix.LogFactory
 {
     public class QuickFixLogger : ILog
     {

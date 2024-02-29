@@ -15,7 +15,7 @@
 
 using QuickFix;
 
-namespace QuantConnect.Wolverine.Fix.Protocol
+namespace QuantConnect.Brokerages.Wolverine.Fix.Protocol
 {
     /// <summary>
     ///     Applies protocol specific customizations, and helps direct FIX messages to specific handlers.

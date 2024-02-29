@@ -17,7 +17,7 @@ using QuantConnect.Orders;
 using QuickFix.FIX42;
 using QF = QuickFix.Fields;
 
-namespace QuantConnect.Wolverine.Fix.Utils
+namespace QuantConnect.Brokerages.Wolverine.Fix.Utils
 {
     public static class Utility
     {

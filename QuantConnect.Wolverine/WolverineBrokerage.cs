@@ -18,14 +18,12 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuantConnect.Brokerages;
-using QuantConnect.Wolverine.Fix;
-using QuantConnect.Wolverine.Fix.Core;
+using QuantConnect.Brokerages.Wolverine.Fix;
+using QuantConnect.Brokerages.Wolverine.Fix.Core;
 using QuickFix.FIX42;
 using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Wolverine.Fix.Utils;
-using QuantConnect.Configuration;
+using QuantConnect.Brokerages.Wolverine.Fix.Utils;
 using QuantConnect.Api;
 using System.Net.NetworkInformation;
 using System.Net;
@@ -36,7 +34,7 @@ using System.Text;
 using Newtonsoft.Json.Linq;
 using QuickFix.Fields;
 
-namespace QuantConnect.Wolverine
+namespace QuantConnect.Brokerages.Wolverine
 {
     [BrokerageFactory(typeof(WolverineBrokerageFactory))]
     public class WolverineBrokerage : Brokerage

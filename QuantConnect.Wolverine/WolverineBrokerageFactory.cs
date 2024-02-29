@@ -15,13 +15,12 @@
 
 using QuantConnect.Util;
 using QuantConnect.Packets;
-using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Configuration;
-using QuantConnect.Wolverine.Fix;
+using QuantConnect.Brokerages.Wolverine.Fix;
 
-namespace QuantConnect.Wolverine
+namespace QuantConnect.Brokerages.Wolverine
 {
     /// <summary>
     /// Provides a Wolverine Brokerage implementation of BrokerageFactory

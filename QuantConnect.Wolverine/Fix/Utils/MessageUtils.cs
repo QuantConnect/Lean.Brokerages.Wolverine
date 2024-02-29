@@ -17,7 +17,7 @@ using QuickFix.Fields;
 using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace QuantConnect.Wolverine.Fix.Utils
+namespace QuantConnect.Brokerages.Wolverine.Fix.Utils
 {
     public static class MessageUtils
     {

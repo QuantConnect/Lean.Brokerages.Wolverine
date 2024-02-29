@@ -35,4 +35,4 @@ jobs:
         run: dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Wolverine.sln
 
       - name: Run Tests
-        run: dotnet test ./QuantConnect.Wolverine.Tests/bin/Release/QuantConnect.Wolverine.Tests.dll
+        run: dotnet test ./QuantConnect.Wolverine.Tests/bin/Release/QuantConnect.Brokerages.Wolverine.Tests.dll

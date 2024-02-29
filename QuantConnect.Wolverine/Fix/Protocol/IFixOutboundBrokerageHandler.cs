@@ -15,7 +15,7 @@
 
 using QuantConnect.Orders;
 
-namespace QuantConnect.Wolverine.Fix.Protocol
+namespace QuantConnect.Brokerages.Wolverine.Fix.Protocol
 {
     public interface IFixOutboundBrokerageHandler
     {

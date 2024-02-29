@@ -15,7 +15,7 @@
 
 using QuantConnect.Tests;
 
-namespace QuantConnect.Wolverine.Tests
+namespace QuantConnect.Brokerages.Wolverine.Tests
 {
     [TestFixture]
     public class TestSetup

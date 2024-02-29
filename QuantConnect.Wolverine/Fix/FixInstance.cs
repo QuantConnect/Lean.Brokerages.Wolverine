@@ -18,10 +18,10 @@ using QuickFix.Fields;
 using QuantConnect.Util;
 using QuickFix.Transport;
 using QuantConnect.Securities;
-using QuantConnect.Wolverine.Fix.Protocol;
-using QuantConnect.Wolverine.Fix.LogFactory;
+using QuantConnect.Brokerages.Wolverine.Fix.Protocol;
+using QuantConnect.Brokerages.Wolverine.Fix.LogFactory;
 
-namespace QuantConnect.Wolverine.Fix
+namespace QuantConnect.Brokerages.Wolverine.Fix
 {
     /// <summary>
     /// The instance of a single QuickFIX/n configuration
