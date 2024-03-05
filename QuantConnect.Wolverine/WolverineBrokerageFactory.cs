@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Util;
 using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
@@ -101,7 +100,6 @@ namespace QuantConnect.Brokerages.Wolverine
                 algorithm.Transactions,                
                 fixConfiguration,
                 algorithm.Portfolio,
-                Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "QuantConnect.Data.Auxiliary.LocalDiskMapFileProvider")),
                 logFixMessages);
 
             return instance;
