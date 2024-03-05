@@ -214,7 +214,7 @@ namespace QuantConnect.Brokerages.Wolverine.Tests
 
         private WolverineBrokerage CreateBrokerage()
         {
-            return new WolverineBrokerage(_algorithm, _job, _orderProvider, _fixConfiguration, new SecurityProvider(), TestGlobals.MapFileProvider, true);
+            return new WolverineBrokerage(_algorithm, _job, _orderProvider, _fixConfiguration, new SecurityProvider(), true);
         }
     }
 }

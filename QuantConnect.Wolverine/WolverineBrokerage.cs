@@ -63,14 +63,13 @@ namespace QuantConnect.Brokerages.Wolverine
             IOrderProvider orderProvider,
             FixConfiguration fixConfiguration,
             ISecurityProvider securityProvider,
-            IMapFileProvider mapFileProvider,
             bool logFixMessages) : base("Wolverine")
         {
             _job = job;
             _algorithm = algorithm;
             _securityProvider = securityProvider;
             _orderProvider = orderProvider;
-
+            var mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
             _symbolMapper = new WolverineSymbolMapper(mapFileProvider);
 
             _fixBrokerageController = new FixBrokerageController();
