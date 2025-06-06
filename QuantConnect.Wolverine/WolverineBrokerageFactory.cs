@@ -17,7 +17,7 @@ using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Configuration;
-using QuantConnect.Brokerages.Wolverine.Fix;
+using QuantConnect.Brokerages.Fix;
 
 namespace QuantConnect.Brokerages.Wolverine
 {
@@ -80,13 +80,11 @@ namespace QuantConnect.Brokerages.Wolverine
                 Account = Read<string>(job.BrokerageData, "wolverine-account", errors),
                 SenderCompId = Read<string>(job.BrokerageData, "wolverine-sender-comp-id", errors),
                 TargetCompId = Read<string>(job.BrokerageData, "wolverine-target-comp-id", errors),
-                OnBehalfOfCompID = Read<string>(job.BrokerageData, "wolverine-on-behalf-of-comp-id", errors)
+                OnBehalfOfCompID = Read<string>(job.BrokerageData, "wolverine-on-behalf-of-comp-id", errors),
+                LogFixMessages = Read<bool>(job.BrokerageData, "wolverine-log-fix-messages", new List<string>())
             };
 
-            var logFixMessages = Read<bool>(job.BrokerageData, "wolverine-log-fix-messages", new List<string>());
-
-            Logging.Log.Trace($"WolverineBrokerageFactory.CreateBrokerage(): Host {fixConfiguration.Host} Port {fixConfiguration.Port} Account {fixConfiguration.Account}" +
-                $" SenderCompId {fixConfiguration.SenderCompId} TargetCompId {fixConfiguration.TargetCompId} OnBehalfOfCompID {fixConfiguration.OnBehalfOfCompID}. LogFixMessages {logFixMessages}");
+            Logging.Log.Trace($"WolverineBrokerageFactory.CreateBrokerage(): {fixConfiguration}");
 
             if (errors.Count != 0)
             {
@@ -99,8 +97,7 @@ namespace QuantConnect.Brokerages.Wolverine
                 job,
                 algorithm.Transactions,                
                 fixConfiguration,
-                algorithm.Portfolio,
-                logFixMessages);
+                algorithm.Portfolio);
 
             return instance;
         }

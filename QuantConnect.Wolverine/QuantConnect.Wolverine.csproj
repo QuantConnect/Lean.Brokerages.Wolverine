@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
 		<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -32,6 +32,9 @@
 		<PackageReference Include="QuantConnect.Brokerages" Version="2.5.*" />
 		<PackageReference Include="QuickFIXn.Core" Version="1.10.0" />
 		<PackageReference Include="QuickFIXn.FIX4.2" Version="1.10.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Lean.Brokerages.Fix\QuantConnect.FixBrokerage\QuantConnect.FixBrokerage.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 	  <None Update="Wolverine-FIX42.xml" Pack="True">
