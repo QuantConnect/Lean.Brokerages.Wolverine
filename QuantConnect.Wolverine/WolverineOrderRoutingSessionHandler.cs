@@ -13,20 +13,18 @@
  * limitations under the License.
 */
 
+using QuickFix;
+using QuickFix.FIX42;
+using QuickFix.Fields;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
-using QuantConnect.Util;
-using QuantConnect.Brokerages.Wolverine.Fix.Core;
-using QuantConnect.Brokerages.Wolverine.Fix.Protocol;
-using QuantConnect.Brokerages.Wolverine.Fix.Utils;
-using QuickFix;
-using QuickFix.Fields;
-using QuickFix.FIX42;
+using QuantConnect.Brokerages.Fix.Connection;
+using QuantConnect.Brokerages.Fix.Core.Interfaces;
 
 namespace QuantConnect.Brokerages.Wolverine
 {
-    public class WolverineOrderRoutingSessionHandler : MessageCracker, IWolverineFixSessionHandler, IFixOutboundBrokerageHandler
+    public class WolverineOrderRoutingSessionHandler : MessageCracker, IFixOrdersController
     {
         private readonly Dictionary<string, string> _exchangeMapping = new() {
             { Exchange.AMEX.Name, "AMEX" },
@@ -45,22 +43,16 @@ namespace QuantConnect.Brokerages.Wolverine
         };
 
         private readonly Account _account;
-        private readonly ISession _session;
         private readonly ISecurityProvider _securityProvider;
         private readonly WolverineSymbolMapper _symbolMapper;
-        private readonly IFixBrokerageController _fixBrokerageController;
 
-        public bool IsReady { get; set; }
+        public IFixConnection Session { get; set; }
 
-        public WolverineOrderRoutingSessionHandler(WolverineSymbolMapper symbolMapper, ISession session, IFixBrokerageController fixBrokerageController, string account, ISecurityProvider securityProvider)
+        public WolverineOrderRoutingSessionHandler(WolverineSymbolMapper symbolMapper, string account, ISecurityProvider securityProvider)
         {
             _symbolMapper = symbolMapper;
             _account = new Account(account);
             _securityProvider = securityProvider;
-            _session = session ?? throw new ArgumentNullException(nameof(session));
-            _fixBrokerageController = fixBrokerageController ?? throw new ArgumentNullException(nameof(fixBrokerageController));
-
-            fixBrokerageController.Register(this);
         }
 
         public bool CancelOrder(Order order)
@@ -70,7 +62,7 @@ namespace QuantConnect.Brokerages.Wolverine
                 ClOrdID = new ClOrdID(WolverineOrderId.GetNext()),
                 OrigClOrdID = new OrigClOrdID(order.BrokerId[0])
             };
-            return _session.Send(orderToCancel);
+            return Session.Send(orderToCancel);
         }
 
         /// <summary>
@@ -134,12 +126,7 @@ namespace QuantConnect.Brokerages.Wolverine
 
             order.BrokerId.Add(wexOrder.ClOrdID.getValue());
 
-            return _session.Send(wexOrder);
-        }
-
-        public bool RequestOpenOrders()
-        {
-            throw new NotImplementedException();
+            return Session.Send(wexOrder);
         }
 
         public bool UpdateOrder(Order order)
@@ -147,53 +134,6 @@ namespace QuantConnect.Brokerages.Wolverine
             throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// Call this method when WEX is rejected order by error 
-        /// </summary>
-        /// <param name="rejection"></param>
-        /// <param name="_"></param>
-        public void OnMessage(OrderCancelReject rejection, SessionID _)
-        {
-            _fixBrokerageController.Receive(rejection);
-        }
-
-        /// <summary>
-        /// Call this method when WEX is executed report about order
-        /// </summary>
-        /// <param name="execution"></param>
-        /// <param name="_"></param>
-        public void OnMessage(ExecutionReport execution, SessionID _)
-        {
-            var orderId = execution.OrderID.getValue();
-            var clOrdId = execution.IsSetClOrdID() ? execution.ClOrdID.getValue() : string.Empty;
-            var execType = execution.ExecType.getValue();
-
-            var orderStatus = Utility.ConvertOrderStatus(execution);
-
-            if (!clOrdId.IsNullOrEmpty())
-            {
-                if (orderStatus != OrderStatus.Invalid)
-                {
-                    Logging.Log.Trace($"WolverineOrderRoutingSessionHandler.OnMessage(): ExecutionReport: Id: {orderId}, ClOrdId: {clOrdId}, ExecType: {execType}, OrderStatus: {orderStatus}");
-                }
-                else
-                {
-                    Logging.Log.Error($"WolverineOrderRoutingSessionHandler.OnMessage(): ExecutionReport: Id: {orderId}, ClOrdId: {clOrdId}, ExecType: {execType}, OrderStatus: {orderStatus}");
-                }
-            }
-
-            var isStatusRequest = execution.IsSetExecTransType() && execution.ExecTransType.getValue() == ExecTransType.STATUS;
-
-            if (!isStatusRequest)
-            {
-                _fixBrokerageController.Receive(execution);
-            }
-
-            if (isStatusRequest)
-            {
-                _fixBrokerageController.OnOpenOrdersReceived();
-            }
-        }
         private string GetOrderExchange(Order order)
         {
             var exchangeDestination = string.Empty;
