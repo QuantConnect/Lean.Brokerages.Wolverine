@@ -1,4 +1,7 @@
 {
+	"name" : "Wolverine",
+	"logo-url" : "https://cdn.quantconnect.com/i/tu/wex-logo.svg",
+	"min-deposit" : "None",
 	"description": "Wolverine Execution Services(WEX) is a low latency, high-quality execution provider integrated with QuantConnect. We have a low-latency FIX connection over a secure tunnel sufficient for prop-desks, professional traders, and quants.",
 	
 	"platforms-features": [
