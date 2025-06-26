@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
 		<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -30,6 +30,7 @@
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
 		<PackageReference Include="QuantConnect.Brokerages" Version="2.5.*" />
+		<PackageReference Include="QuantConnect.Brokerages.Fix" Version="2.5.*" />
 		<PackageReference Include="QuickFIXn.Core" Version="1.10.0" />
 		<PackageReference Include="QuickFIXn.FIX4.2" Version="1.10.0" />
 	</ItemGroup>
