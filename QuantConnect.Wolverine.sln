@@ -19,8 +19,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Wolverine", "Q
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Wolverine.Tests", "QuantConnect.Wolverine.Tests\QuantConnect.Wolverine.Tests.csproj", "{78FB3A52-FA73-4E1D-BB19-7F814DB73688}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantConnect.FixBrokerage", "..\Lean.Brokerages.Fix\QuantConnect.FixBrokerage\QuantConnect.FixBrokerage.csproj", "{88064EE6-5A17-1CF2-9B4D-47AE37A65EBA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,10 +57,6 @@ Global
 		{78FB3A52-FA73-4E1D-BB19-7F814DB73688}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78FB3A52-FA73-4E1D-BB19-7F814DB73688}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78FB3A52-FA73-4E1D-BB19-7F814DB73688}.Release|Any CPU.Build.0 = Release|Any CPU
-		{88064EE6-5A17-1CF2-9B4D-47AE37A65EBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{88064EE6-5A17-1CF2-9B4D-47AE37A65EBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{88064EE6-5A17-1CF2-9B4D-47AE37A65EBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{88064EE6-5A17-1CF2-9B4D-47AE37A65EBA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
