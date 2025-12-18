@@ -27,7 +27,6 @@ using QuantConnect.Brokerages.Wolverine.Fix.Utils;
 using QuantConnect.Api;
 using System.Net.NetworkInformation;
 using System.Net;
-using RestSharp;
 using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -342,8 +341,13 @@ namespace QuantConnect.Brokerages.Wolverine
                 {
                     information.Add("organizationId", organizationId);
                 }
-                var request = new RestRequest("modules/license/read", Method.POST) { RequestFormat = DataFormat.Json };
-                request.AddParameter("application/json", JsonConvert.SerializeObject(information), ParameterType.RequestBody);
+                // Create HTTP request
+                var request = new HttpRequestMessage(HttpMethod.Post, "modules/license/read");
+                request.Content = new StringContent(
+                    JsonConvert.SerializeObject(information),
+                    Encoding.UTF8,
+                    "application/json"
+                );
                 api.TryRequest(request, out ModulesReadLicenseRead result);
                 if (!result.Success)
                 {
