@@ -17,6 +17,7 @@ using QuickFix;
 using QuickFix.FIX42;
 using QuickFix.Fields;
 using QuantConnect.Orders;
+using System.Globalization;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Brokerages.Fix.Connection;
@@ -26,6 +27,7 @@ namespace QuantConnect.Brokerages.Wolverine
 {
     public class WolverineOrderRoutingSessionHandler : MessageCracker, IFixOrdersController
     {
+        private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
         private readonly Dictionary<string, string> _exchangeMapping = new() {
             { Exchange.AMEX.Name, "AMEX" },
             { Exchange.ARCA.Name, "ARCA" },
@@ -92,10 +94,22 @@ namespace QuantConnect.Brokerages.Wolverine
                 ExDestination = new ExDestination(GetOrderExchange(order))
             };
 
-            if (order.Symbol.SecurityType == SecurityType.Option)
+            if (order.Symbol.SecurityType.IsOption())
             {
-                wexOrder.MaturityMonthYear = Utility.GetMaturityMonthYear(order.Symbol);
                 wexOrder.StrikePrice = new StrikePrice(decimal.Round(order.Price, Utility.LIMIT_DECIMAL_PLACE));
+
+                var expirationDate = order.Symbol.ID.Date;
+                wexOrder.SetField(new MaturityMonthYear(expirationDate.ToString("yyyyMM", CultureInfo.InvariantCulture)));
+                wexOrder.SetField(new MaturityDay(expirationDate.Day.ToString(CultureInfo.InvariantCulture)));
+                wexOrder.SetField(new ContractMultiplier(GetSymbolProperties(order.Symbol).ContractMultiplier));
+                wexOrder.SetField(new PutOrCall(order.Symbol.ID.OptionRight == OptionRight.Call ? PutOrCall.CALL : PutOrCall.PUT));
+            }
+            else if (order.Symbol.SecurityType == SecurityType.Future)
+            {
+                var expirationDate = order.Symbol.ID.Date;
+                wexOrder.SetField(new MaturityMonthYear(expirationDate.ToString("yyyyMM", CultureInfo.InvariantCulture)));
+                wexOrder.SetField(new MaturityDay(expirationDate.Day.ToString(CultureInfo.InvariantCulture)));
+                wexOrder.SetField(new ContractMultiplier(GetSymbolProperties(order.Symbol).ContractMultiplier));
             }
 
             switch (order.Type)
@@ -161,6 +175,11 @@ namespace QuantConnect.Brokerages.Wolverine
                 exchangePostFix = wolverineOrderProperties.ExchangePostFix;
             }
             return wolverineExchange + exchangePostFix;
+        }
+
+        private SymbolProperties GetSymbolProperties(Symbol symbol)
+        {
+            return _symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, Currencies.USD);
         }
     }
 }
