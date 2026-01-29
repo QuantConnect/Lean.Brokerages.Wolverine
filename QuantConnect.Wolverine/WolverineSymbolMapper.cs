@@ -42,10 +42,6 @@ namespace QuantConnect.Brokerages.Wolverine
 
         public string GetBrokerageSymbol(Symbol symbol)
         {
-            if (symbol.ID.SecurityType != SecurityType.Equity && symbol.ID.SecurityType != SecurityType.Option)
-            {
-                throw new ArgumentException("Invalid security type: " + symbol.ID.SecurityType);
-            }
             return GetMappedTicker(symbol);
         }
 

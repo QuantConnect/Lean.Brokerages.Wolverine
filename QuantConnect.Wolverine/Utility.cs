@@ -25,21 +25,6 @@ namespace QuantConnect.Brokerages.Wolverine
         /// </summary>
         public const int LIMIT_DECIMAL_PLACE = 3;
 
-        public static QF.MaturityMonthYear GetMaturityMonthYear(Symbol symbol)
-        {
-            if (symbol.SecurityType != SecurityType.Option)
-            {
-                throw new NotSupportedException("GetMaturityMonthYear() can only be called for the Option security type.");
-            }
-
-            var ticker = SymbolRepresentation.GenerateFutureTicker(symbol.ID.Symbol, symbol.ID.Date);
-            var properties = SymbolRepresentation.ParseFutureTicker(ticker);
-
-            var maturity = $"{2000 + properties.ExpirationYearShort:D4}{properties.ExpirationMonth:D2}";
-
-            return new QF.MaturityMonthYear(maturity);
-        }
-
         public static QF.TimeInForce ConvertTimeInForce(TimeInForce timeInForce, OrderType orderType)
         {
             if (timeInForce == TimeInForce.GoodTilCanceled)
