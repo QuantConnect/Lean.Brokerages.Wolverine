@@ -76,7 +76,7 @@ namespace QuantConnect.Brokerages.Wolverine
         {
             var side = new Side(order.Direction == OrderDirection.Buy ? Side.BUY : Side.SELL);
 
-            var ticker = _symbolMapper.GetBrokerageSymbol(order.Symbol);
+            var ticker = _symbolMapper.GetBrokerageSymbol(order.Symbol.HasUnderlying ? order.Symbol.Underlying : order.Symbol);
             var securityType = new QuickFix.Fields.SecurityType(_symbolMapper.GetBrokerageSecurityType(order.Symbol.SecurityType));
 
             var wexOrder = new NewOrderSingle
