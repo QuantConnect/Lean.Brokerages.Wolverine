@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-using QuantConnect.Tests;
+using QuantConnect.Brokerages.Fix;
 
 namespace QuantConnect.Brokerages.Wolverine.Tests
 {
@@ -186,35 +186,9 @@ namespace QuantConnect.Brokerages.Wolverine.Tests
             }
         }
 
-        [Test]
-        public void CanLogonAfterLogout()
-        {
-            var symbolMapper = new WolverineSymbolMapper(TestGlobals.MapFileProvider);
-
-            var brokerageController = new FixBrokerageController();
-
-            var fixProtocolDirector = new WolverineFixProtocolDirector(symbolMapper, _fixConfiguration.Account, brokerageController, new SecurityProvider());
-
-            using var fixInstance = new FixInstance(fixProtocolDirector, _fixConfiguration, true);
-
-            fixInstance.Initialize();
-
-            var sessionId = new SessionID(_fixConfiguration.FixVersionString, _fixConfiguration.SenderCompId, _fixConfiguration.TargetCompId);
-
-            Thread.Sleep(20000);
-
-            fixInstance.OnLogout(sessionId);
-
-            fixInstance.OnLogon(sessionId);
-
-            Thread.Sleep(20000);
-
-            fixInstance.Terminate();
-        }
-
         private WolverineBrokerage CreateBrokerage()
         {
-            return new WolverineBrokerage(_algorithm, _job, _orderProvider, _fixConfiguration, new SecurityProvider(), true);
+            return new WolverineBrokerage(_algorithm, _job, _orderProvider, _fixConfiguration, new SecurityProvider());
         }
     }
 }

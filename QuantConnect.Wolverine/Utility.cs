@@ -14,10 +14,9 @@
 */
 
 using QuantConnect.Orders;
-using QuickFix.FIX42;
 using QF = QuickFix.Fields;
 
-namespace QuantConnect.Brokerages.Wolverine.Fix.Utils
+namespace QuantConnect.Brokerages.Wolverine
 {
     public static class Utility
     {
@@ -60,44 +59,6 @@ namespace QuantConnect.Brokerages.Wolverine.Fix.Utils
             }
 
             throw new NotSupportedException($"Unsupported TimeInForce: {timeInForce.GetType().Name}");
-        }
-
-        public static OrderStatus ConvertOrderStatus(ExecutionReport execution)
-        {
-            var execType = execution.ExecType.getValue();
-            if (execType == QF.ExecType.ORDER_STATUS)
-            {
-                execType = execution.OrdStatus.getValue();
-            }
-
-            switch (execType)
-            {
-                case QF.ExecType.NEW:
-                    return OrderStatus.Submitted;
-
-                case QF.ExecType.PENDING_CANCEL:
-                    return OrderStatus.CancelPending;
-
-                case QF.ExecType.CANCELLED:
-                    return OrderStatus.Canceled;
-
-                case QF.ExecType.REPLACED:
-                    return OrderStatus.UpdateSubmitted;
-
-                case QF.ExecType.PARTIAL_FILL:
-                    return OrderStatus.PartiallyFilled;
-
-                case QF.ExecType.FILL:
-                    return OrderStatus.Filled;
-
-                case QF.ExecType.TRADE:
-                    return execution.CumQty.getValue() < execution.OrderQty.getValue()
-                        ? OrderStatus.PartiallyFilled
-                        : OrderStatus.Filled;
-
-                default:
-                    return OrderStatus.Invalid;
-            }
         }
     }
 }
