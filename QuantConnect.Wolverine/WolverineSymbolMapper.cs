@@ -22,24 +22,9 @@ namespace QuantConnect.Brokerages.Wolverine
     {
         private readonly IMapFileProvider _mapFileProvider;
 
-        // WEX SecurityType -> LEAN security type
-        private readonly Dictionary<string, SecurityType> _mapSecurityTypeToLeanSecurityType = new Dictionary<string, SecurityType>
-        {
-            { QuickFix.Fields.SecurityType.COMMON_STOCK, SecurityType.Equity },
-            { QuickFix.Fields.SecurityType.FUTURE, SecurityType.Future },
-            { QuickFix.Fields.SecurityType.OPTION, SecurityType.Option },
-            { QuickFix.Fields.SecurityType.OPTION, SecurityType.IndexOption },
-            { QuickFix.Fields.SecurityType.OPTION, SecurityType.FutureOption }
-        };
-
-        // LEAN security type -> WEX Security TYpe
-        private readonly Dictionary<SecurityType, string> _mapLeanSecurityTypeToSecurityType;
-
         public WolverineSymbolMapper(IMapFileProvider mapFileProvider)
         {
             _mapFileProvider = mapFileProvider;
-            _mapLeanSecurityTypeToSecurityType = _mapSecurityTypeToLeanSecurityType
-                .ToDictionary(x => x.Value, x => x.Key);
         }
 
         public string GetBrokerageSymbol(Symbol symbol)
@@ -54,12 +39,19 @@ namespace QuantConnect.Brokerages.Wolverine
 
         public string GetBrokerageSecurityType(SecurityType leanSecurityType)
         {
-            if (!_mapLeanSecurityTypeToSecurityType.TryGetValue(leanSecurityType, out var securityTypeBrokerage))
+            switch (leanSecurityType)
             {
-                throw new NotSupportedException($"Unsupported LEAN security type: {leanSecurityType}");
+                case SecurityType.Equity:
+                    return QuickFix.Fields.SecurityType.COMMON_STOCK;
+                case SecurityType.Option:
+                case SecurityType.IndexOption:
+                case SecurityType.FutureOption:
+                    return QuickFix.Fields.SecurityType.OPTION;
+                case SecurityType.Future:
+                    return QuickFix.Fields.SecurityType.FUTURE;
+                default:
+                    throw new NotSupportedException($"Unsupported LEAN security type: {leanSecurityType}");
             }
-
-            return securityTypeBrokerage;
         }
 
         private string GetMappedTicker(Symbol symbol)

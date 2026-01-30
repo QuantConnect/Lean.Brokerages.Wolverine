@@ -46,6 +46,8 @@ namespace QuantConnect.Brokerages.Wolverine.Tests
 
         [TestCase(SecurityType.Equity, "CS")]
         [TestCase(SecurityType.Option, "OPT")]
+        [TestCase(SecurityType.IndexOption, "OPT")]
+        [TestCase(SecurityType.FutureOption, "OPT")]
         [TestCase(SecurityType.Future, "FUT")]
         public void GetBrokerageSecurityType(SecurityType securityType, string expectedSecurityType)
         {
