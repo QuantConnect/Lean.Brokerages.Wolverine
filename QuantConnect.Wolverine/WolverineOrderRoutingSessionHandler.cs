@@ -97,6 +97,7 @@ namespace QuantConnect.Brokerages.Wolverine
 
             if (order.Symbol.SecurityType.IsOption())
             {
+                wexOrder.SetField(GetOrderSideType(order));
                 wexOrder.SetField(new StrikePrice(order.Symbol.ID.StrikePrice));
 
                 var expirationDate = order.Symbol.ID.Date;
@@ -176,6 +177,18 @@ namespace QuantConnect.Brokerages.Wolverine
                 exchangePostFix = wolverineOrderProperties.ExchangePostFix;
             }
             return wolverineExchange + exchangePostFix;
+        }
+
+        private OpenClose GetOrderSideType(Order order)
+        {
+            var holdingQuantity = _securityProvider.GetHoldingsQuantity(order.Symbol);
+            var orderPosition = BrokerageExtensions.GetOrderPosition(order.Direction, holdingQuantity);
+
+            if (orderPosition == OrderPosition.BuyToClose || orderPosition == OrderPosition.SellToClose)
+            {
+                return new OpenClose(OpenClose.CLOSE);
+            }
+            return new OpenClose(OpenClose.OPEN);
         }
 
         private SymbolProperties GetSymbolProperties(Symbol symbol)
