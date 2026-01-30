@@ -181,8 +181,17 @@ namespace QuantConnect.Brokerages.Wolverine
 
         private OpenClose GetOrderSideType(Order order)
         {
-            var holdingQuantity = _securityProvider.GetHoldingsQuantity(order.Symbol);
-            var orderPosition = BrokerageExtensions.GetOrderPosition(order.Direction, holdingQuantity);
+            OrderPosition orderPosition;
+            var wolverineOrderProperties = order.Properties as WolverineOrderProperties;
+            if (wolverineOrderProperties != null && wolverineOrderProperties.PositionSide.HasValue)
+            {
+                orderPosition = wolverineOrderProperties.PositionSide.Value;
+            }
+            else
+            {
+                var holdingQuantity = _securityProvider.GetHoldingsQuantity(order.Symbol);
+                orderPosition = BrokerageExtensions.GetOrderPosition(order.Direction, holdingQuantity);
+            }
 
             if (orderPosition == OrderPosition.BuyToClose || orderPosition == OrderPosition.SellToClose)
             {
