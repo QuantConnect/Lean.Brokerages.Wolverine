@@ -93,6 +93,7 @@ namespace QuantConnect.Brokerages.Wolverine
                 Account = _account,
                 ExDestination = new ExDestination(GetOrderExchange(order))
             };
+            wexOrder.SetField(new CustomerOrFirm(CustomerOrFirm.CUSTOMER));
 
             if (order.Symbol.SecurityType.IsOption())
             {
