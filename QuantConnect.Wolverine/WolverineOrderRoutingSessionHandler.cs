@@ -96,7 +96,7 @@ namespace QuantConnect.Brokerages.Wolverine
 
             if (order.Symbol.SecurityType.IsOption())
             {
-                wexOrder.StrikePrice = new StrikePrice(decimal.Round(order.Price, Utility.LIMIT_DECIMAL_PLACE));
+                wexOrder.SetField(new StrikePrice(order.Symbol.ID.StrikePrice));
 
                 var expirationDate = order.Symbol.ID.Date;
                 wexOrder.SetField(new MaturityMonthYear(expirationDate.ToString("yyyyMM", CultureInfo.InvariantCulture)));

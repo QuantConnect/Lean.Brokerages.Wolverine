@@ -27,7 +27,9 @@ namespace QuantConnect.Brokerages.Wolverine
         {
             { QuickFix.Fields.SecurityType.COMMON_STOCK, SecurityType.Equity },
             { QuickFix.Fields.SecurityType.FUTURE, SecurityType.Future },
-            { QuickFix.Fields.SecurityType.OPTION, SecurityType.Option }
+            { QuickFix.Fields.SecurityType.OPTION, SecurityType.Option },
+            { QuickFix.Fields.SecurityType.OPTION, SecurityType.IndexOption },
+            { QuickFix.Fields.SecurityType.OPTION, SecurityType.FutureOption }
         };
 
         // LEAN security type -> WEX Security TYpe
