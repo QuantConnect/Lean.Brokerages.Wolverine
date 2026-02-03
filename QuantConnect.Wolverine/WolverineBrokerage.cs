@@ -13,12 +13,13 @@
  * limitations under the License.
 */
 
+using QuickFix.FIX42;
+using QuickFix.Fields;
 using QuantConnect.Util;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
-using QuickFix.FIX42;
 using QuantConnect.Brokerages.Fix;
 
 namespace QuantConnect.Brokerages.Wolverine
@@ -54,9 +55,16 @@ namespace QuantConnect.Brokerages.Wolverine
         {
             var orderStatus = Fix.Utility.ConvertOrderStatus(e);
 
-            var orderId = orderStatus == OrderStatus.Canceled || orderStatus == OrderStatus.CancelPending || orderStatus == OrderStatus.UpdateSubmitted
-                ? e.OrigClOrdID.getValue()
-                : e.ClOrdID.getValue();
+            string orderId;
+            if (e.IsSetField(OrigClOrdID.TAG) && (orderStatus == OrderStatus.Canceled || orderStatus == OrderStatus.CancelPending || orderStatus == OrderStatus.UpdateSubmitted))
+            {
+                // tag might not be for unsolicited cancels
+                orderId = e.OrigClOrdID.getValue();
+            }
+            else
+            {
+                orderId = e.ClOrdID.getValue();
+            }
 
             OnExecutionReport(orderId, e);
         }
