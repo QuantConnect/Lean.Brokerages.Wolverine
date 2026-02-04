@@ -95,6 +95,7 @@ namespace QuantConnect.Brokerages.Wolverine
             };
             wexOrder.SetField(new CustomerOrFirm(CustomerOrFirm.CUSTOMER));
 
+            SetOrderLocateBroker(order, wexOrder);
             if (order.Symbol.SecurityType.IsOption())
             {
                 wexOrder.SetField(GetOrderSideType(order));
@@ -148,6 +149,27 @@ namespace QuantConnect.Brokerages.Wolverine
         public bool UpdateOrder(Order order)
         {
             throw new NotImplementedException();
+        }
+
+        private void SetOrderLocateBroker(Order order, NewOrderSingle wexOrder)
+        {
+            // shorting equities
+            if (order.Symbol.SecurityType != SecurityType.Equity || order.Quantity > 0)
+            {
+                return;
+            }
+
+            var wolverineOrderProperties = order.Properties as WolverineOrderProperties;
+            if (wolverineOrderProperties != null && !string.IsNullOrEmpty(wolverineOrderProperties.LocateBroker))
+            {
+                wexOrder.SetField(new LocateReqd(false));
+                wexOrder.SetField(new StringField(5700, wolverineOrderProperties.LocateBroker));
+            }
+            else
+            {
+                // Yes means brokers pick up the locate
+                wexOrder.SetField(new LocateReqd(true));
+            }
         }
 
         private string GetOrderExchange(Order order)
