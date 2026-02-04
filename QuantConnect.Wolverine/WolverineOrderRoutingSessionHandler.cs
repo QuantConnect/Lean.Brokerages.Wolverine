@@ -170,6 +170,23 @@ namespace QuantConnect.Brokerages.Wolverine
                 // Yes means brokers pick up the locate
                 wexOrder.SetField(new LocateReqd(true));
             }
+
+            if (wolverineOrderProperties != null && wolverineOrderProperties.PositionSide.HasValue
+                && wolverineOrderProperties.PositionSide.Value == OrderPosition.SellToOpen)
+            {
+                wexOrder.Side = new Side(Side.SELL_SHORT);
+            }
+            else
+            {
+                var holdingQuantity = _securityProvider.GetHoldingsQuantity(order.Symbol);
+                var orderPosition = BrokerageExtensions.GetOrderPosition(order.Direction, holdingQuantity);
+                if (orderPosition == OrderPosition.SellToOpen || (holdingQuantity + order.Quantity) < 0)
+                {
+                    // if we are going short or shorter use SELL_SHORT
+                    // if we are crossing from long to short use SELL_SHORT
+                    wexOrder.Side = new Side(Side.SELL_SHORT);
+                }
+            }
         }
 
         private string GetOrderExchange(Order order)
