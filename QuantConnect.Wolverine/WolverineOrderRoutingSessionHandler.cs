@@ -197,16 +197,19 @@ namespace QuantConnect.Brokerages.Wolverine
             {
                 exchangeDestination = orderProperties.Exchange.ToString();
             }
+            var equityDefault = false;
             if (string.IsNullOrEmpty(exchangeDestination) && order.Symbol.SecurityType == SecurityType.Equity)
             {
                 var equity = _securityProvider.GetSecurity(order.Symbol) as Equity;
                 // potentially need to map this into Atreyu expected destination exchange name
                 exchangeDestination = equity?.PrimaryExchange.ToString();
+                equityDefault = true;
             }
 
             if (!_exchangeMapping.TryGetValue(exchangeDestination.ToUpper(), out var wolverineExchange))
             {
-                wolverineExchange = "SMART";
+                // trust the user knows best only use smart if exchange was automatically set to primary exchange for equities
+                wolverineExchange = equityDefault ? "SMART" : exchangeDestination.ToUpper();
             }
 
             var exchangePostFix = string.Empty;
