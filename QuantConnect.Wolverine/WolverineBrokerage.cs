@@ -21,6 +21,7 @@ using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Brokerages.Fix;
+using QuantConnect.Lean.Engine.Results;
 
 namespace QuantConnect.Brokerages.Wolverine
 {
@@ -48,6 +49,10 @@ namespace QuantConnect.Brokerages.Wolverine
             _symbolMapper = new WolverineSymbolMapper(mapFileProvider);
 
             InitializeFix(new WolverineOrderRoutingSessionHandler(_symbolMapper, fixConfiguration.Account, _securityProvider));
+
+            DeploymentDetailsHelper.Add("wolverine-account", fixConfiguration.Account);
+            DeploymentDetailsHelper.Add("wolverine-on-behalf-of-comp-id", fixConfiguration.OnBehalfOfCompID);
+
             ValidateSubscription(221);
         }
 
